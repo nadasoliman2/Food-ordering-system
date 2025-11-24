@@ -1,0 +1,77 @@
+/* الألوان المستخدمة في الصورة تقريبًا */
+:root {
+    --primary-color: #69a297; /* لون زر Sign Up والخلفية الداخلية */
+    --secondary-color: #e9f0ef; /* لون خلفية الناف بار الرئيسية */
+    --text-color: #555; /* لون النصوص العادية */
+    --active-text-color: #333; /* لون رابط Home النشط */
+    --light-text-color: #a8b9b8; /* لون شعار Yum Yard */
+}
+
+/* 1. تنسيق الحاوية الرئيسية (الشكل البيضاوي والخلفية الفاتحة) */
+.custom-navbar-container {
+    background-color: var(--secondary-color);
+    border-radius: 50px; /* لإعطاء الشكل البيضاوي */
+    padding: 10px 30px; /* تباعد داخلي */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05); /* ظل خفيف لتحسين المظهر */
+    max-width: 1200px; /* يمكن تعديل العرض حسب التصميم الكلي */
+    margin: 20px auto; /* لتوسيط الناف بار في الصفحة */
+}
+
+/* 2. تنسيق الشعار (Yum Yard) */
+.custom-logo {
+    font-weight: bold;
+    font-size: 1.5rem;
+    color: var(--light-text-color) !important;
+}
+
+/* 3. تنسيق روابط القائمة */
+.custom-nav-links .nav-link {
+    color: var(--text-color) !important;
+    font-weight: 500;
+    margin-right: 15px; /* تباعد بين الروابط */
+}
+
+/* 4. تنسيق الرابط النشط (Home) */
+.custom-nav-links .nav-link.active {
+    color: var(--active-text-color) !important;
+    font-weight: bold;
+}
+
+/* 5. تنسيق أيقونة البحث */
+.custom-search-btn {
+    border: none;
+    background-color: white; /* خلفية بيضاء */
+    border-radius: 50%; /* شكل دائري */
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    color: var(--text-color);
+    font-size: 1.1rem;
+}
+
+/* 6. تنسيق زر تسجيل الدخول (Sign In) */
+.custom-signin-btn {
+    background: none;
+    border: none;
+    color: #333; /* لون نص Sign In غامق */
+    font-weight: 600;
+}
+
+/* 7. تنسيق زر تسجيل جديد (Sign Up) */
+.custom-signup-btn {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 30px; /* حواف دائرية مثل الصورة */
+    padding: 8px 20px;
+    font-weight: 600;
+    transition: background-color 0.3s;
+}
+
+.custom-signup-btn:hover {
+    background-color: #55877e; /* لون أغمق عند التمرير */
+    color: white;
+}
