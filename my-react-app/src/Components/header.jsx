@@ -1,5 +1,7 @@
+import { height } from "@fortawesome/free-solid-svg-icons/fa0";
+
 export default function Header() {
-    return (<div className="sushi-banner container-fluid py-1" style={{ backgroundColor: '#81A4A6' }}>
+    return (<div className="sushi-banner container-fluid " style={{ backgroundColor: '#81A4A6', paddingTop: '8rem' }}>
         <div className="row align-items-center w-[70%] mx-auto">
             {/* Text Column (Takes 6/12 columns on medium screens and up) */}
             <div className="col-md-6 text-black p-4">

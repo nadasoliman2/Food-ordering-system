@@ -8,6 +8,7 @@ import Cart from './cart/Cart.jsx';
 import Login from './auth/login/login.jsx';
 import Register from './auth/register/register.jsx';
 import AdminLogin from './auth/login/adminlogin/adminlogin.jsx';
+import ProductDetails from './Menu/productDetails.jsx';
 function App() {
 
   return (
@@ -23,7 +24,9 @@ function App() {
           {/* صفحات تانية لو عايزة */}
           {/* <Route path="menu" element={<Menu />} /> */}
           <Route path="/menu" element={<Menu />} />
-<Route path="/cart" element={<Cart />} />
+          <Route path="/cart" element={<Cart />} />
+          <Route path="/product/:id" element={<ProductDetails />} /> 
+
 
         </Route>
 

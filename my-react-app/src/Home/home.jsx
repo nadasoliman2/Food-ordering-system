@@ -10,13 +10,11 @@ import DeliverySection from "./deliverySection";
 export default function Home() {
   return (
     <>
-     
       <Header />
       <CategorySection></CategorySection>
       <PopularDishesSection></PopularDishesSection>
       <SpecialOffersSection/>
       <DeliverySection></DeliverySection>
-   
     </>
 
   )
