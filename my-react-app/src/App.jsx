@@ -9,10 +9,13 @@ import Login from './auth/login/login.jsx';
 import Register from './auth/register/register.jsx';
 import AdminLogin from './auth/login/adminlogin/adminlogin.jsx';
 import ProductDetails from './Menu/productDetails.jsx';
+import { CartProvider } from "./context/CartContext";
+
 function App() {
 
   return (
     <>
+    <CartProvider>
       <Routes>
 
         {/* Layout ثابت طول الموقع */}
@@ -35,6 +38,7 @@ function App() {
 <Route path="/auth/login/adminlogin" element={<AdminLogin />} />
 
       </Routes>
+      </CartProvider>
     </>
   );
 }
