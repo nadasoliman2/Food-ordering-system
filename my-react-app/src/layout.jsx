@@ -5,8 +5,12 @@ import Footer from "./Components/footer";
 export default function Layout() {
     return (
         <>
+        <div className="d-flex flex-column justify-content-between min-vh-100">
         <Navbar />
-        <Outlet />
-        <Footer/>
+ <div className="">
+    <Outlet />
+  </div>        <Footer/>
+        </div>
         </>
+
     );}

@@ -1,27 +1,39 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
 import './App.css'
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import Home from './Home/home';
 import React from 'react';
-
-import Layout from './layout.jsx';
+import Layout from './layout';
+import { Menu } from './Menu/menu';
+import Cart from './cart/Cart.jsx';
+import Login from './auth/login/login.jsx';
+import Register from './auth/register/register.jsx';
+import AdminLogin from './auth/login/adminlogin/adminlogin.jsx';
 function App() {
-
 
   return (
     <>
-<React.StrictMode>
-      <BrowserRouter>
-        <Routes>
-          {/* عند فتح الموقع مباشرةً سيظهر Home */}
-          <Route path="/" element={<Home />} />
-        </Routes>
-      </BrowserRouter>
-    </React.StrictMode>
+      <Routes>
+
+        {/* Layout ثابت طول الموقع */}
+        <Route path="/" element={<Layout />}>
+
+          {/* دي اللي بتخلي أول صفحة تظهر هي Home */}
+          <Route index element={<Home />} />
+
+          {/* صفحات تانية لو عايزة */}
+          {/* <Route path="menu" element={<Menu />} /> */}
+          <Route path="/menu" element={<Menu />} />
+<Route path="/cart" element={<Cart />} />
+
+        </Route>
+
+<Route path="/auth/login" element={<Login />} />
+<Route path="/auth/register" element={<Register />} />
+<Route path="/auth/login/adminlogin" element={<AdminLogin />} />
+
+      </Routes>
     </>
-  )
+  );
 }
 
-export default App
+export default App;

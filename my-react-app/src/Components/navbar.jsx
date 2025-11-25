@@ -1,47 +1,87 @@
 // Navbar.jsx
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faMagnifyingGlass } from "@fortawesome/free-solid-svg-icons";
+import { NavLink } from "react-router-dom";
 
 export default function AppNavbar() {
   return (
-<nav class="navbar navbar-expand-lg custom-navbar-container">
-    <div class="container-fluid">
-        <a class="navbar-brand custom-logo" href="#">Yum Yard</a>
-        
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav mx-auto custom-nav-links">
-                <li class="nav-item">
-                    <a class="nav-link active" aria-current="page" href="#">Home</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="#">Menu</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="#">Cart</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="#">About Us</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="#">Contact Us</a>
-                </li>
-            </ul>
-        </div>
-        
-        <div class="d-flex align-items-center custom-actions">
-            <button class="btn custom-search-btn me-3" type="button">
-                <i class="bi bi-search"></i> 
-                </button>
+    <nav className="navbar navbar-expand-lg custom-navbar-container position-absolute" style={{ left: 0, right: 0 }}>
+      <div className="container">
+        <NavLink
+          to="/"
+          className="navbar-brand custom-logo"
+          style={{ color: "#81A4A6", fontSize: "2rem" }}
+        >
+          Yum Yard
+        </NavLink>
 
-            <a href="#" class="btn me-3 custom-signin-btn">Sign In</a>
-            
-            <a href="#" class="btn custom-signup-btn">Sign Up</a>
+        <button
+          className="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navbarNav"
+          aria-controls="navbarNav"
+          aria-expanded="false"
+          aria-label="Toggle navigation"
+        >
+          <span className="navbar-toggler-icon"></span>
+        </button>
+
+        <div className="collapse navbar-collapse" id="navbarNav">
+          <ul className="navbar-nav mx-auto custom-nav-links">
+            <li className="nav-item">
+              <NavLink
+                to="/"
+                className={({ isActive }) => "nav-link" + (isActive ? " active" : "")}
+              >
+                Home
+              </NavLink>
+            </li>
+            <li className="nav-item">
+              <NavLink
+                to="/menu"
+                className={({ isActive }) => "nav-link" + (isActive ? " active" : "")}
+              >
+                Menu
+              </NavLink>
+            </li>
+            <li className="nav-item">
+              <NavLink
+                to="/cart"
+                className={({ isActive }) => "nav-link" + (isActive ? " active" : "")}
+              >
+                Cart
+              </NavLink>
+            </li>
+            <li className="nav-item">
+              <NavLink
+                to="/about"
+                className={({ isActive }) => "nav-link" + (isActive ? " active" : "")}
+              >
+                About Us
+              </NavLink>
+            </li>
+            <li className="nav-item">
+              <NavLink
+                to="/contact"
+                className={({ isActive }) => "nav-link" + (isActive ? " active" : "")}
+              >
+                Contact Us
+              </NavLink>
+            </li>
+          </ul>
         </div>
-    </div>
-</nav>
+
+        <div className="d-flex align-items-center custom-actions">
+          <NavLink to="/auth/login" className="btn me-3 custom-signin-btn">
+            Sign In
+          </NavLink>
+
+          <NavLink to="/auth/register" className="btn custom-signup-btn " style={{background:"#81A4A6",color:"white",borderRadius:"20px"}}>
+            Sign Up
+          </NavLink>
+        </div>
+      </div>
+    </nav>
   );
 }
