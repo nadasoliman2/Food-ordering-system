@@ -10,6 +10,7 @@ import Register from './auth/register/register.jsx';
 import AdminLogin from './auth/login/adminlogin/adminlogin.jsx';
 import ProductDetails from './Menu/productDetails.jsx';
 import { CartProvider } from "./context/CartContext";
+import Profile from './profilepage/profile.jsx';
 
 function App() {
 
@@ -29,7 +30,7 @@ function App() {
           <Route path="/menu" element={<Menu />} />
           <Route path="/cart" element={<Cart />} />
           <Route path="/product/:id" element={<ProductDetails />} /> 
-
+<Route path="/profile" element={<Profile />} />
 
         </Route>
 

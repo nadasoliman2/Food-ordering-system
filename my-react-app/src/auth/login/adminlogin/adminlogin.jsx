@@ -1,7 +1,7 @@
 import { useForm } from "react-hook-form";
 import image from "../../../assets/login.png";
 import "@fortawesome/fontawesome-free/css/all.min.css";
-import admin from "../../../assets/eos-icons_admin.png";
+import admin from "../../../assets/solar_user-bold.png";
 import { Link } from "react-router-dom";
 
 export default function AdminLogin() {
@@ -45,8 +45,7 @@ export default function AdminLogin() {
 
   const rightPanelStyle = {
     flex: 1,
-    backgroundColor: "#81A4A6",
-    bordertRadius: "20px",
+    bordertRadius: "10px",
     position: "relative",
     display: "flex",
     alignItems: "center",
@@ -140,7 +139,7 @@ export default function AdminLogin() {
 
             <button
               type="submit"
-              className="btn w-100"
+              className="btn w-100 mt-4"
               style={{
                 backgroundColor: "#328286",
                 color: "white",
@@ -153,12 +152,7 @@ export default function AdminLogin() {
               Sign In
             </button>
 
-            <p className="text-center mt-3" style={{ fontSize: "0.9rem" }}>
-              Already have an account?{" "}
-              <a href="/auth/login" style={{ color: "#328286", fontWeight: "600" }}>
-                sign up
-              </a>
-            </p>
+           
           </form>
         </div>
 
