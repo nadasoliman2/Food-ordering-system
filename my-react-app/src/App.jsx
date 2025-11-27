@@ -11,6 +11,7 @@ import AdminLogin from "./auth/login/adminlogin/adminlogin.jsx";
 import ProductDetails from "./Menu/productDetails.jsx";
 import { CartProvider } from "./context/CartContext";
 import AboutUs from "./AboutUs/AboutUs.jsx";
+import Profile from "./profilepage/profile.jsx";
 
 function App() {
   return (
@@ -22,12 +23,16 @@ function App() {
             {/* دي اللي بتخلي أول صفحة تظهر هي Home */}
             <Route index element={<Home />} />
 
+            {/* دي اللي بتخلي أول صفحة تظهر هي Home */}
+            <Route index element={<Home />} />
+
             {/* صفحات تانية لو عايزة */}
             {/* <Route path="menu" element={<Menu />} /> */}
             <Route path="/menu" element={<Menu />} />
             <Route path="/cart" element={<Cart />} />
             <Route path="/product/:id" element={<ProductDetails />} />
             <Route path="/about" element={<AboutUs />} />
+            <Route path="/profile" element={<Profile />} />
           </Route>
 
           <Route path="/auth/login" element={<Login />} />

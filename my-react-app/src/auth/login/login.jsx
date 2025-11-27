@@ -145,6 +145,7 @@ export default function Login() {
             <div className="d-flex align-items-center" style={inputGroupStyle}>
               <i className="fas fa-lock" style={iconStyle}></i>
               <input
+              className=""
                 type="password"
                 id="password"
                 placeholder="Enter Your Password"
@@ -169,7 +170,7 @@ export default function Login() {
             {/* زر التسجيل */}
             <button
               type="submit"
-              className="btn w-100"
+              className="btn w-100 mt-4"
               style={{
                 backgroundColor: "#328286",
                 color: "white",
@@ -184,7 +185,7 @@ export default function Login() {
 
             {/* رابط تسجيل الدخول */}
             <p className="text-center mt-3" style={{ fontSize: "0.9rem" }}>
-              Already have an account? <a href="/auth/login" style={{ color: "#328286", fontWeight: "600" }}>sign up</a>
+              Already have an account? <a href="/auth/register" style={{ color: "#328286", fontWeight: "600" }}>sign up</a>
             </p>
           </form>
         </div>
