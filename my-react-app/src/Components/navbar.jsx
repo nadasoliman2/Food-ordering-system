@@ -2,10 +2,14 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faMagnifyingGlass } from "@fortawesome/free-solid-svg-icons";
 import { NavLink } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 
 export default function AppNavbar() {
   return (
-    <nav className="navbar navbar-expand-lg custom-navbar-container position-absolute" style={{ left: 0, right: 0 }}>
+    <nav
+      className="navbar navbar-expand-lg custom-navbar-container position-absolute"
+      style={{ left: 0, right: 0 }}
+    >
       <div className="container">
         <NavLink
           to="/"
@@ -32,7 +36,9 @@ export default function AppNavbar() {
             <li className="nav-item">
               <NavLink
                 to="/"
-                className={({ isActive }) => "nav-link" + (isActive ? " active" : "")}
+                className={({ isActive }) =>
+                  "nav-link" + (isActive ? " active" : "")
+                }
               >
                 Home
               </NavLink>
@@ -40,7 +46,9 @@ export default function AppNavbar() {
             <li className="nav-item">
               <NavLink
                 to="/menu"
-                className={({ isActive }) => "nav-link" + (isActive ? " active" : "")}
+                className={({ isActive }) =>
+                  "nav-link" + (isActive ? " active" : "")
+                }
               >
                 Menu
               </NavLink>
@@ -48,23 +56,49 @@ export default function AppNavbar() {
             <li className="nav-item">
               <NavLink
                 to="/cart"
-                className={({ isActive }) => "nav-link" + (isActive ? " active" : "")}
+                className={({ isActive }) =>
+                  "nav-link" + (isActive ? " active" : "")
+                }
               >
                 Cart
               </NavLink>
             </li>
+
             <li className="nav-item">
               <NavLink
                 to="/about"
-                className={({ isActive }) => "nav-link" + (isActive ? " active" : "")}
+                className={({ isActive }) =>
+                  "nav-link" + (isActive ? " active" : "")
+                }
               >
                 About Us
               </NavLink>
             </li>
+
+            {/* ⭐ Contact Us → About + Scroll using NavLink */}
             <li className="nav-item">
               <NavLink
-                to="/contact"
-                className={({ isActive }) => "nav-link" + (isActive ? " active" : "")}
+                to="/about#about-contact-section"
+                className={({ isActive }) =>
+                  "nav-link" +
+                  (isActive && window.location.hash === "#about-contact-section"
+                    ? " active"
+                    : "")
+                }
+                onClick={(e) => {
+                  if (window.location.pathname === "/about") {
+                    e.preventDefault();
+                    const el = document.getElementById("about-contact-section");
+                    if (el) {
+                      el.scrollIntoView({ behavior: "smooth", block: "start" });
+                    }
+                    window.history.replaceState(
+                      null,
+                      "",
+                      "/about#about-contact-section"
+                    );
+                  }
+                }}
               >
                 Contact Us
               </NavLink>
@@ -77,7 +111,15 @@ export default function AppNavbar() {
             Sign In
           </NavLink>
 
-          <NavLink to="/auth/register" className="btn custom-signup-btn " style={{background:"#81A4A6",color:"white",borderRadius:"20px"}}>
+          <NavLink
+            to="/auth/register"
+            className="btn custom-signup-btn "
+            style={{
+              background: "#81A4A6",
+              color: "white",
+              borderRadius: "20px",
+            }}
+          >
             Sign Up
           </NavLink>
         </div>
