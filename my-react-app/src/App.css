@@ -20,7 +20,14 @@ body {
     max-width: 1200px; /* يمكن تعديل العرض حسب التصميم الكلي */
     margin: 20px auto; /* لتوسيط الناف بار في الصفحة */
 }
-
+.custom-navbar-container-admin {
+    background-color: white;
+    border-radius: 50px; /* لإعطاء الشكل البيضاوي */
+    padding: 10px 30px; /* تباعد داخلي */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05); /* ظل خفيف لتحسين المظهر */
+    max-width: 1200px; /* يمكن تعديل العرض حسب التصميم الكلي */
+    margin: 20px auto; /* لتوسيط الناف بار في الصفحة */
+}
 /* 2. تنسيق الشعار (Yum Yard) */
 .custom-logo {
     font-weight: bold;
@@ -80,4 +87,33 @@ body {
 .custom-signup-btn:hover {
     background-color: #55877e; /* لون أغمق عند التمرير */
     color: white;
+}
+/*
+  ملف: custom.css أو index.css
+*/
+
+.btn-green {
+    /* اللون الأساسي */
+    background-color: #87A5A6 !important;
+    border-color: #87A5A6 !important;
+    color: white !important; /* لضمان ظهور النص باللون الأبيض */
+}
+
+.btn-green:hover,
+.btn-green:focus,
+.btn-green:active,
+.btn-green.active {
+    /* تثبيت اللون عند التحويم والضغط والتركيز */
+    background-color: #729091 !important; /* لون أغمق قليلاً للتحويم لإضافة تفاعل */
+    border-color: #729091 !important;
+    color: white !important;
+    box-shadow: none !important; /* لإزالة أي ظل أزرق قد يظهر في حالة التركيز */
+}
+/* إلغاء حلقة التركيز الزرقاء لحقل البحث */
+.input-group input.form-control:focus,
+.form-control:focus {
+    /* إلغاء الظل الأزرق الافتراضي */
+    box-shadow: none !important;
+    /* تثبيت لون الحدود على اللون الرمادي الفاتح أو اللون الذي تفضلينه */
+    border-color: #ced4da !important; /* لون حدود Bootstrap الافتراضي */
 }

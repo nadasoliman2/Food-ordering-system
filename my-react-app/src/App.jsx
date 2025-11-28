@@ -13,6 +13,11 @@ import { CartProvider } from "./context/CartContext";
 import AboutUs from "./AboutUs/AboutUs.jsx";
 import Profile from "./profilepage/profile.jsx";
 import Restaurants from "./restaurants/restaurants.jsx";
+import LayoutAdmin from "./AdminPanel/Layoutadmin.jsx";
+import Dashboard from "./AdminPanel/componentadmin/Dashboard.jsx";
+import OrderReport from "./AdminPanel/componentadmin/OrderReport.jsx";
+import SalesReport from "./AdminPanel/componentadmin/SalesReport.jsx";
+
 
 function App() {
   return (
@@ -35,11 +40,23 @@ function App() {
             <Route path="/product/:id" element={<ProductDetails />} />
             <Route path="/about" element={<AboutUs />} />
             <Route path="/profile" element={<Profile />} />
+
           </Route>
 
           <Route path="/auth/login" element={<Login />} />
           <Route path="/auth/register" element={<Register />} />
+
+
           <Route path="/auth/login/adminlogin" element={<AdminLogin />} />
+
+   <Route path="/admin" element={<LayoutAdmin />}>
+  <Route index element={<Dashboard />} />
+  <Route path="orders" element={<OrderReport />} />
+  <Route path="sales" element={<SalesReport />} />
+</Route>
+
+                                         
+
         </Routes>
       </CartProvider>
     </>
