@@ -10,14 +10,6 @@ return (
               Different And Delicious Taste
             </h2>
           </div>
-          <div className="col-lg-6 d-flex justify-content-lg-end align-items-center gap-3">
-            <button className="btn text-white" style={{ backgroundColor: '#5C8A83' }}>
-              Contact Us
-            </button>
-            <button className="btn text-white" style={{ backgroundColor: '#4A7970' }}>
-              View Menu
-            </button>
-          </div>
         </div>
 
         {/* Links Section */}

@@ -12,6 +12,7 @@ import ProductDetails from "./Menu/productDetails.jsx";
 import { CartProvider } from "./context/CartContext";
 import AboutUs from "./AboutUs/AboutUs.jsx";
 import Profile from "./profilepage/profile.jsx";
+import Restaurants from "./restaurants/restaurants.jsx";
 
 function App() {
   return (
@@ -28,7 +29,8 @@ function App() {
 
             {/* صفحات تانية لو عايزة */}
             {/* <Route path="menu" element={<Menu />} /> */}
-            <Route path="/menu" element={<Menu />} />
+            <Route path="/restaurants" element={<Restaurants/>} />
+            <Route path="/menu/:restaurantId" element={<Menu />} />
             <Route path="/cart" element={<Cart />} />
             <Route path="/product/:id" element={<ProductDetails />} />
             <Route path="/about" element={<AboutUs />} />

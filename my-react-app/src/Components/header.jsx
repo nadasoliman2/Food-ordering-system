@@ -1,6 +1,15 @@
 import { height } from "@fortawesome/free-solid-svg-icons/fa0";
+import { useNavigate } from "react-router-dom";
 
 export default function Header() {
+
+    const navigate = useNavigate();
+    
+
+  const handleGoToRestaurants = () => {
+    navigate("/restaurants");
+  };
+
     return (<div className="sushi-banner container-fluid " style={{ backgroundColor: '#81A4A6', paddingTop: '8rem' }}>
         <div className="row align-items-center w-[70%] mx-auto">
             {/* Text Column (Takes 6/12 columns on medium screens and up) */}
@@ -19,6 +28,7 @@ export default function Header() {
                 <button
                     className="btn btn-lg btn-success-custom text-white rounded-pill"
                     style={{ backgroundColor: '#5B8E91' }}
+                    onClick={handleGoToRestaurants}
                 >
                     Start Shopping <i className="bi bi-bag ms-2"></i>        <img
                         src="/Vector.png"

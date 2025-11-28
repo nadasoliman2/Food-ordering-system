@@ -5,6 +5,14 @@ import { NavLink } from "react-router-dom";
 import { Link, useLocation } from "react-router-dom";
 
 export default function AppNavbar() {
+  const location = useLocation();
+
+
+  const isRestaurantActive =
+    location.pathname.startsWith("/restaurants") ||
+    location.pathname.startsWith("/menu") ||
+    location.pathname.startsWith("/product");
+
   return (
     <nav
       className="navbar navbar-expand-lg custom-navbar-container position-absolute"
@@ -45,12 +53,13 @@ export default function AppNavbar() {
             </li>
             <li className="nav-item">
               <NavLink
-                to="/menu"
-                className={({ isActive }) =>
-                  "nav-link" + (isActive ? " active" : "")
+                to="/restaurants"
+                className={
+                  "nav-link" +
+                  (isRestaurantActive ? " active text-primary fw-bold" : "")
                 }
               >
-                Menu
+                Restaurants
               </NavLink>
             </li>
             <li className="nav-item">
