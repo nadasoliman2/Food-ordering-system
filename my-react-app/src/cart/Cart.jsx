@@ -1,8 +1,9 @@
-import React from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { useCart } from "../context/CartContext";
+import { useNavigate } from "react-router-dom";
 
 export default function Cart() {
+  const navigate = useNavigate();
   const { cartItems, increaseQty, decreaseQty, removeFromCart } = useCart();
 
   // totals
@@ -126,6 +127,7 @@ export default function Cart() {
                         borderRadius: "30px",
                         fontSize: "1.1rem",
                       }}
+                      onClick={() => navigate("/checkout")} // 👈 navigate to checkout
                     >
                       <span className="me-2">Checkout</span>${subtotal.toFixed(2)}
                     </button>

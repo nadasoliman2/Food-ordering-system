@@ -17,7 +17,8 @@ import LayoutAdmin from "./AdminPanel/Layoutadmin.jsx";
 import Dashboard from "./AdminPanel/componentadmin/Dashboard.jsx";
 import OrderReport from "./AdminPanel/componentadmin/OrderReport.jsx";
 import SalesReport from "./AdminPanel/componentadmin/SalesReport.jsx";
-
+import Checkout from "./cart/checkout.jsx";
+import OrderStatus from "./cart/orderStatus.jsx";
 
 function App() {
   return (
@@ -37,6 +38,8 @@ function App() {
             <Route path="/restaurants" element={<Restaurants/>} />
             <Route path="/menu/:restaurantId" element={<Menu />} />
             <Route path="/cart" element={<Cart />} />
+            <Route path="/checkout" element={<Checkout />} />
+            <Route path="/orderStatus" element={<OrderStatus />} />
             <Route path="/product/:id" element={<ProductDetails />} />
             <Route path="/about" element={<AboutUs />} />
             <Route path="/profile" element={<Profile />} />
