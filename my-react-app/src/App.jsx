@@ -36,11 +36,11 @@ function App() {
             {/* صفحات تانية لو عايزة */}
             {/* <Route path="menu" element={<Menu />} /> */}
             <Route path="/restaurants" element={<Restaurants/>} />
-            <Route path="/menu/:restaurantId" element={<Menu />} />
+            <Route path="/menu/:restaurantName" element={<Menu />} />
             <Route path="/cart" element={<Cart />} />
             <Route path="/checkout" element={<Checkout />} />
             <Route path="/orderStatus" element={<OrderStatus />} />
-            <Route path="/product/:id" element={<ProductDetails />} />
+            <Route path="/product/:restaurantId/:itemName" element={<ProductDetails />} />
             <Route path="/about" element={<AboutUs />} />
             <Route path="/profile" element={<Profile />} />
 

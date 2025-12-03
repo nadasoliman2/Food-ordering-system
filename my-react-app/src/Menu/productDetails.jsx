@@ -1,22 +1,55 @@
+// src/pages/ProductDetails.jsx
 import { useParams } from "react-router-dom";
-import { useState } from "react";
-import { getProductById } from "../data/foodItems";
+import { useState, useEffect } from "react";
+import "bootstrap/dist/css/bootstrap.min.css";
 import ReviewCard from "../Components/reviewCard";
 import { useCart } from "../context/CartContext";
-import "bootstrap/dist/css/bootstrap.min.css";
 import AddReviewModal from "../Components/addReviewModel";
 import FloatingMessageCard from "../Components/floatingMessageCard";
+import { getItemDetails } from "../services/itemApi";
 
 export default function ProductDetails() {
-  const { id } = useParams();
-  const item = getProductById(id);
+  const { restaurantId, itemName } = useParams(); // navigated as /product/:restaurantId/:itemName
   const { addToCart } = useCart();
 
+  const [item, setItem] = useState(null);
+  const [recommended, setRecommended] = useState([]);
   const [quantity, setQuantity] = useState(1);
   const [selectedSize, setSelectedSize] = useState("Small");
+  const [loading, setLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [showReviewSubmitted, setShowReviewSubmitted] = useState(false);
+
+  // ✅ Fetch product details from API
+  useEffect(() => {
+    async function fetchItem() {
+      try {
+        setLoading(true);
+        const res = await getItemDetails(restaurantId, itemName);
+        console.log("Item details:", res.data);
+
+        const data = res.data.data;
+
+        setItem({
+          ...data.item,
+          reviews: data.reviews || [],
+        });
+
+        setRecommended(data.recommended || []);
+      } catch (error) {
+        console.error("Error fetching item details:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchItem();
+  }, [restaurantId, itemName]);
+
+  if (loading) {
+    return <p className="text-center py-5">Loading item details...</p>;
+  }
 
   if (!item) {
     return <p className="text-center py-5">Product not found.</p>;
@@ -25,8 +58,9 @@ export default function ProductDetails() {
   const handleIncrease = () => setQuantity(quantity + 1);
   const handleDecrease = () => quantity > 1 && setQuantity(quantity - 1);
 
-  const handleAddToCart = () => {
-    addToCart(item, quantity);
+  // ✅ Add to cart with backend data
+  const handleAddToCart = async () => {
+    await addToCart(item, quantity, selectedSize, item.RestaurantName);
     setShowSuccess(true);
     setTimeout(() => setShowSuccess(false), 2500);
   };
@@ -37,6 +71,10 @@ export default function ProductDetails() {
     setShowReviewSubmitted(true);
     setTimeout(() => setShowReviewSubmitted(false), 2500);
   };
+
+  const imageUrl = item.ImageURL
+    ? `http://localhost:4000/${item.ImageURL}`
+    : "/restaurant.jpg";
 
   return (
     <>
@@ -49,22 +87,26 @@ export default function ProductDetails() {
               style={{ width: "450px", marginRight: "70px", marginLeft: "50px" }}
             >
               <img
-                src={item.image}
-                alt={item.name}
+                src={imageUrl}
+                alt={item.ItemName}
                 className="img-fluid rounded-4"
+                style={{ objectFit: "cover", maxHeight: "400px" }}
               />
             </div>
 
             <div className="col-lg-6">
-              <h2 className="fw-bold mb-3">{item.name}</h2>
+              <h2 className="fw-bold mb-3">{item.ItemName}</h2>
 
               <div className="d-flex align-items-center mb-3">
                 <span className="text-warning me-2">⭐</span>
-                <span className="fw-bold">{item.rating}</span>
+                <span className="fw-bold">
+                  {item.avg_rating} ({item.review_count})
+                </span>
               </div>
 
-              <p className="text-muted mb-4">{item.description}</p>
+              <p className="text-muted mb-4">{item.ItemDescription}</p>
 
+              {/* Quantity Controls */}
               <div className="d-flex align-items-center mb-4">
                 <button
                   className="btn btn-dark rounded-circle"
@@ -83,14 +125,13 @@ export default function ProductDetails() {
                 </button>
               </div>
 
+              {/* Size Options */}
               <div className="d-flex gap-3 mb-4">
                 {["Small", "Medium", "Large"].map((size) => (
                   <button
                     key={size}
                     className={`btn ${
-                      selectedSize === size
-                        ? "btn-dark"
-                        : "btn-outline-secondary"
+                      selectedSize === size ? "btn-dark" : "btn-outline-secondary"
                     } px-4`}
                     onClick={() => setSelectedSize(size)}
                   >
@@ -100,7 +141,7 @@ export default function ProductDetails() {
               </div>
 
               <div className="d-flex align-items-center gap-4">
-                <h3 className="fw-bold mb-0">${item.price}</h3>
+                <h3 className="fw-bold mb-0">${item.Price}</h3>
                 <button
                   className="btn btn-lg px-5 text-white"
                   style={{
@@ -129,9 +170,13 @@ export default function ProductDetails() {
               scrollBehavior: "smooth",
             }}
           >
-            {item.reviews.map((review) => (
-              <ReviewCard key={review.id} review={review} />
-            ))}
+            {item.reviews && item.reviews.length > 0 ? (
+              item.reviews.map((review, i) => (
+                <ReviewCard key={i} review={review} />
+              ))
+            ) : (
+              <p className="text-muted">No reviews yet.</p>
+            )}
           </div>
         </div>
         <button
@@ -148,17 +193,52 @@ export default function ProductDetails() {
         </button>
       </section>
 
-      {/* ✅ Floating "Added to Cart" message */}
+      {/* ⭐ Recommended Items */}
+      {recommended && recommended.length > 0 && (
+        <section className="py-5">
+          <div className="container">
+            <h3 className="fw-bold mb-4">Recommended for You</h3>
+            <div className="row g-4">
+              {recommended.map((rec, index) => (
+                <div className="col-md-4" key={index}>
+                  <div className="card border-0 shadow-sm">
+                    <img
+                      src={`http://localhost:4000/${rec.image_url}`}
+                      alt={rec.item_name}
+                      className="card-img-top"
+                      style={{
+                        height: "200px",
+                        objectFit: "cover",
+                        borderRadius: "10px 10px 0 0",
+                      }}
+                    />
+                    <div className="card-body">
+                      <h5 className="fw-bold">{rec.item_name}</h5>
+                      <p className="text-muted mb-1">{rec.description}</p>
+                      <div className="d-flex justify-content-between">
+                        <span className="fw-bold text-success">${rec.price}</span>
+                        <small className="text-muted">
+                          ⭐ {rec.avg_rating} ({rec.review_count})
+                        </small>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* ✅ Floating messages */}
       {showSuccess && (
-      <FloatingMessageCard message={'Added to cart successfully!'}></FloatingMessageCard>
+        <FloatingMessageCard message="Added to cart successfully!" />
       )}
-
-      {/* ✅ Floating "Review Submitted" message */}
       {showReviewSubmitted && (
-      <FloatingMessageCard message={'Review submitted successfully!'}></FloatingMessageCard>
+        <FloatingMessageCard message="Review submitted successfully!" />
       )}
 
-      {/* ✅ AddReviewModal Component */}
+      {/* ✅ Add Review Modal */}
       <AddReviewModal
         show={showReviewModal}
         onClose={() => setShowReviewModal(false)}

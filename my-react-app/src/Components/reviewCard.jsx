@@ -10,12 +10,12 @@ export default function ReviewCard({review}){
             borderRadius: '10px',
           }}
         >
-          <h6 className="fw-bold mb-1">{review.name}</h6>
+          <h6 className="fw-bold mb-1">{review.username}</h6>
           <small className="text-muted">{review.role}</small>
           <div className="mb-2 text-warning">
-            {'★'.repeat(review.rating)}
+            {'★'.repeat(review.Rating)}
           </div>
-          <p className="text-muted small" >{review.text}</p>
+          <p className="text-muted small" >{review.Review}</p>
         </div>
     )
 }

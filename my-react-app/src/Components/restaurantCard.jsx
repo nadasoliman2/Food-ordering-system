@@ -4,19 +4,23 @@ import { FaStar } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
 
-export default function RestaurantCard({ id, name, rating, imageUrl, categories }) {
+export default function RestaurantCard({ id, name, rating, imageUrl }) {
   const navigate = useNavigate();
 
   const handleExploreClick = () => {
-    navigate(`/menu/${id}`);
+    navigate(`/menu/${name}`);
   };
 
   return (
-    <div className="restaurant-card d-flex justify-content-between align-items-center p-3 my-3 rounded-4" style={{backgroundColor: '#EDF3F3'}}>
+    <div className="restaurant-card d-flex justify-content-between align-items-center p-3 my-3 rounded-4" style={{ backgroundColor: '#EDF3F3' }}>
       {/* Left side - image, name, rating */}
       <div className="d-flex align-items-center">
         <img
-          src={imageUrl}
+          src={
+            imageUrl.startsWith("http")
+              ? imageUrl
+              : `http://localhost:4000/${imageUrl.replace(/^\/+/, "")}`
+          }
           alt={name}
           className="rounded-4 me-3"
           style={{ width: "60px", height: "60px", objectFit: "cover" }}
@@ -28,18 +32,6 @@ export default function RestaurantCard({ id, name, rating, imageUrl, categories 
             <span>{rating}</span>
           </div>
 
-          {/* Categories */}
-          <div className="d-flex flex-wrap gap-2">
-            {categories && categories.length > 0 ? (
-              categories.map((cat, i) => (
-                <span key={i} className="badge bg-light text-dark border">
-                  {cat}
-                </span>
-              ))
-            ) : (
-              <small className="text-muted">No categories</small>
-            )}
-          </div>
         </div>
       </div>
 

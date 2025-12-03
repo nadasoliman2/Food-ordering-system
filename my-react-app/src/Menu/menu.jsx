@@ -2,49 +2,95 @@ import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
 import MenuFoodCard from "../Components/menuFoodCard";
-import { getProductsByRestaurant } from "../data/foodItems";
+import { getRestaurantMenu, searchRestaurantItems } from "../services/menuApi";
 
 export function Menu() {
-  const { restaurantId } = useParams();
+  const { restaurantName } = useParams();
+  const decodedRestaurantName = decodeURIComponent(restaurantName);
+
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [restaurantMenu, setRestaurantMenu] = useState([]);
   const [availableCategories, setAvailableCategories] = useState([]);
   const [restaurantDetails, setRestaurantDetails] = useState(null);
+  const [loading, setLoading] = useState(false);
 
-  // ✅ Fetch the restaurant’s data
+  // ✅ Fetch full menu
   useEffect(() => {
-    const data = getProductsByRestaurant(restaurantId);
-    setRestaurantMenu(data);
+    async function fetchMenuData() {
+      try {
+        setLoading(true);
+        const res = await getRestaurantMenu(decodedRestaurantName);
+        console.log("Menu response:", res.data);
 
-    if (data.length > 0) {
-      // Use the first item to get name + image (since all share the same restaurant)
-      setRestaurantDetails({
-        id: data[0].restaurantId,
-        name: data[0].restaurantName,
-        imageUrl: "/restaurant.jpg",
-      });
+        const categories = res.data.data.categories || [];
+        const allItems = categories.flatMap((cat) =>
+          cat.items.map((item) => ({
+            ...item,
+            category_name: cat.category_name,
+            RestaurantName: decodedRestaurantName,
+          }))
+        );
 
-      // Extract restaurant‑specific categories
-      const uniqueCategories = [...new Set(data.map((item) => item.category))];
-      setAvailableCategories(["All", ...uniqueCategories]);
+        setRestaurantMenu(allItems);
+        setAvailableCategories(["All", ...categories.map((cat) => cat.category_name)]);
+        setRestaurantDetails({
+          name: decodedRestaurantName,
+          imageUrl:
+            categories[0]?.image_url
+              ? `http://localhost:4000/${categories[0].image_url}`
+              : "/restaurant.jpg",
+        });
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setLoading(false);
+      }
     }
-  }, [restaurantId]);
 
-  const filteredCategories = availableCategories.filter((cat) =>
-    cat.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+    fetchMenuData();
+  }, [decodedRestaurantName]);
+
+  // ✅ Search handler (debounced)
+  useEffect(() => {
+    const delay = setTimeout(async () => {
+      if (!searchTerm.trim()) {
+        const res = await getRestaurantMenu(decodedRestaurantName);
+        const categories = res.data.data.categories || [];
+        const allItems = categories.flatMap((cat) =>
+          cat.items.map((item) => ({
+            ...item,
+            category_name: cat.category_name,
+            RestaurantName: decodedRestaurantName,
+          }))
+        );
+        setRestaurantMenu(allItems);
+        return;
+      }
+
+      try {
+        const res = await searchRestaurantItems(decodedRestaurantName, searchTerm);
+        const results = res.data.data.results || [];
+        const normalized = results.map((item) => ({
+          ...item,
+          RestaurantName: decodedRestaurantName,
+        }));
+        setRestaurantMenu(normalized);
+      } catch (e) {
+        console.error(e);
+      }
+    }, 500);
+    return () => clearTimeout(delay);
+  }, [searchTerm, decodedRestaurantName]);
 
   const displayedItems =
     selectedCategory === "All"
       ? restaurantMenu
-      : restaurantMenu.filter((item) => item.category === selectedCategory);
+      : restaurantMenu.filter((item) => item.category_name === selectedCategory);
 
   return (
     <section className="py-5">
       <div className="container" style={{ paddingTop: "80px" }}>
-
-        {/* 🏪 Restaurant Header */}
         {restaurantDetails && (
           <div className="text-center mb-5">
             <img
@@ -62,14 +108,14 @@ export function Menu() {
           </div>
         )}
 
-        {/* 🔍 Category Search Bar */}
+        {/* Search bar */}
         <div className="row justify-content-center mb-5">
           <div className="col-lg-6">
             <div className="position-relative">
               <input
                 type="text"
                 className="form-control form-control-lg rounded-pill ps-5"
-                placeholder="Search food categories..."
+                placeholder="Search food items..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
@@ -87,10 +133,10 @@ export function Menu() {
           </div>
         </div>
 
-        {/* 🍴 Dynamic Categories */}
+        {/* Categories */}
         <div className="overflow-auto mb-5" style={{ whiteSpace: "nowrap" }}>
-          <div className="d-inline-flex gap-4 pb-3" style={{marginTop:'5px'}}>
-            {filteredCategories.map((category, index) => (
+          <div className="d-inline-flex gap-4 pb-3" style={{ marginTop: "5px" }}>
+            {availableCategories.map((category, index) => (
               <div
                 key={index}
                 className="text-center"
@@ -131,27 +177,20 @@ export function Menu() {
           </div>
         </div>
 
-        {/* 🧾 Menu Items */}
-        <div>
-          {displayedItems.length > 0 ? (
-            <>
-              <h4 className="mb-4">
-                {selectedCategory === "All"
-                  ? "All Menu Items"
-                  : `Available ${selectedCategory} Items`}
-              </h4>
-              <div className="row g-4">
-                {displayedItems.map((item) => (
-                  <MenuFoodCard key={item.id} item={item} />
-                ))}
-              </div>
-            </>
-          ) : (
-            <div className="text-center py-5 text-muted">
-              No items found for this category.
-            </div>
-          )}
-        </div>
+        {/* Menu items */}
+        {loading ? (
+          <div className="text-center py-5 text-muted">Loading...</div>
+        ) : displayedItems.length > 0 ? (
+          <div className="row g-4">
+            {displayedItems.map((item, index) => (
+              <MenuFoodCard key={index} item={item} />
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-5 text-muted">
+            No items found matching your search.
+          </div>
+        )}
       </div>
     </section>
   );

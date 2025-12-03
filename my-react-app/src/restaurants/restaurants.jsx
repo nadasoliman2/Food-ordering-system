@@ -1,61 +1,78 @@
 // src/pages/Restaurants.jsx
-import React, { useState } from "react";
-import foodItems from "../data/foodItems";
-import RestaurantCard from "../Components/restaurantCard";
+import React, { useEffect, useState } from "react";
+import RestaurantCard from "../Components/RestaurantCard";
+import { getRestaurants, searchRestaurants } from "../services/restaurantApi";
 
 export default function Restaurants() {
+  const [restaurants, setRestaurants] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  // Prepare restaurant data
-  const restaurantList = foodItems.map((restaurant) => {
-    const categories = Object.keys(restaurant.categories);
-    const allItems = Object.values(restaurant.categories).flat();
+  // Fetch all restaurants on initial load
+  useEffect(() => {
+    async function fetchRestaurants() {
+      try {
+        setLoading(true);
+        const res = await getRestaurants();
+        console.log("Restaurant API Response:", res.data);
+        setRestaurants(res.data.data.restaurants);
+      } catch (err) {
+        console.error("Error fetching restaurants:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
 
+    fetchRestaurants();
+  }, []);
 
-    return {
-      id: restaurant.restaurantId,
-      name: restaurant.restaurantName,
-      categories,
-      rating: '4.5',
-      imageUrl: 'restaurant.jpg'
-    };
-  });
+  // Handle search input (calls API /search endpoint)
+  const handleSearchChange = async (e) => {
+    const searchValue = e.target.value;
+    setSearchTerm(searchValue);
 
-  // Filter restaurants by search term (name or category)
-  const filteredRestaurants = restaurantList.filter((restaurant) => {
-    const nameMatch = restaurant.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const categoryMatch = restaurant.categories.some((cat) =>
-      cat.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-    return nameMatch || categoryMatch;
-  });
+    if (searchValue.trim() === "") {
+      // If search box is cleared, reload all restaurants
+      const res = await getRestaurants();
+      setRestaurants(res.data.data.restaurants);
+    } else {
+      try {
+        const res = await searchRestaurants(searchValue);
+        setRestaurants(res.data.data.results); // results array from API
+      } catch (err) {
+        console.error("Error searching restaurants:", err);
+      }
+    }
+  };
 
   return (
     <div className="container py-5" style={{ paddingTop: "100px" }}>
       {/* Search bar */}
-      <div className="row justify-content-center mb-4" style={{marginTop:"100px"}}>
+      <div className="row justify-content-center mb-4" style={{ marginTop: "100px" }}>
         <div className="col-md-6">
           <input
             type="text"
             className="form-control form-control-lg rounded-pill ps-4"
-            placeholder="Search restaurants or categories (e.g., burger)..."
+            placeholder="Search restaurants..."
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={handleSearchChange}
           />
         </div>
       </div>
+
       <h5 className="fw-bold mb-4">Available Restaurants</h5>
 
-      {/* Restaurant list */}
-      {filteredRestaurants.length > 0 ? (
-        filteredRestaurants.map((rest) => (
+      {loading ? (
+        <p className="text-center text-muted">Loading...</p>
+      ) : restaurants.length > 0 ? (
+        restaurants.map((rest, index) => (
           <RestaurantCard
-            key={rest.id}
-            id={rest.id}
-            name={rest.name}
-            imageUrl={rest.imageUrl}
+            key={index}
+            name={rest.restaurant_name}
             rating={rest.rating}
-            categories={rest.categories}
+            imageUrl={rest.image_url}
+            id={index}
+           
           />
         ))
       ) : (

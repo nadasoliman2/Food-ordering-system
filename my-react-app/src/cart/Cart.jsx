@@ -1,3 +1,4 @@
+// src/pages/Cart.jsx
 import "bootstrap/dist/css/bootstrap.min.css";
 import { useCart } from "../context/CartContext";
 import { useNavigate } from "react-router-dom";
@@ -6,7 +7,7 @@ export default function Cart() {
   const navigate = useNavigate();
   const { cartItems, increaseQty, decreaseQty, removeFromCart } = useCart();
 
-  // totals
+  // Totals (computed on frontend)
   const itemsTotal = cartItems.reduce(
     (sum, item) => sum + item.price * item.quantity,
     0
@@ -53,6 +54,13 @@ export default function Cart() {
                         <small className="text-success fw-semibold">
                           ${item.price.toFixed(2)}
                         </small>
+                        {item.size && (
+                          <div>
+                            <small className="text-muted">
+                              Size: {item.size}
+                            </small>
+                          </div>
+                        )}
                       </div>
                     </div>
 
@@ -127,7 +135,7 @@ export default function Cart() {
                         borderRadius: "30px",
                         fontSize: "1.1rem",
                       }}
-                      onClick={() => navigate("/checkout")} // 👈 navigate to checkout
+                      onClick={() => navigate("/checkout")}
                     >
                       <span className="me-2">Checkout</span>${subtotal.toFixed(2)}
                     </button>

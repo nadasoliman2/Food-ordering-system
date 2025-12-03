@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 
-export default function RestaurantHomeCard({ name, image, id }) {
+export default function RestaurantHomeCard({ name, image}) {
   const navigate = useNavigate();
 
   return (
@@ -16,7 +16,7 @@ export default function RestaurantHomeCard({ name, image, id }) {
         boxShadow: "0 2px 6px rgba(0,0,0,0.05)",
         transition: "transform 0.2s",
       }}
-      onClick={() => navigate(`/menu/${id}`)} // ✅ navigate to menu
+      onClick={() => navigate(`/menu/${encodeURIComponent(name)}`)}// ✅ navigate to menu
       onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.04)")}
       onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
     >
