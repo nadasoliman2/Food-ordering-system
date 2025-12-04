@@ -7,6 +7,7 @@ import { useCart } from "../context/CartContext";
 import AddReviewModal from "../Components/addReviewModel";
 import FloatingMessageCard from "../Components/floatingMessageCard";
 import { getItemDetails } from "../services/itemApi";
+import { fetchReviews, addReview } from "../services/reviewsApi";
 
 export default function ProductDetails() {
   const { restaurantId, itemName } = useParams(); // navigated as /product/:restaurantId/:itemName
@@ -14,6 +15,12 @@ export default function ProductDetails() {
 
   const [item, setItem] = useState(null);
   const [recommended, setRecommended] = useState([]);
+
+  // ⭐ NEW states for reviews
+  const [reviews, setReviews] = useState([]);
+  const [avgRating, setAvgRating] = useState(0);
+  const [reviewCount, setReviewCount] = useState(0);
+
   const [quantity, setQuantity] = useState(1);
   const [selectedSize, setSelectedSize] = useState("Small");
   const [loading, setLoading] = useState(false);
@@ -33,10 +40,12 @@ export default function ProductDetails() {
 
         setItem({
           ...data.item,
-          reviews: data.reviews || [],
         });
 
         setRecommended(data.recommended || []);
+
+        // ⭐ GET reviews from API
+        await loadReviews(data.item.RestaurantName, data.item.ItemName);
       } catch (error) {
         console.error("Error fetching item details:", error);
       } finally {
@@ -46,6 +55,22 @@ export default function ProductDetails() {
 
     fetchItem();
   }, [restaurantId, itemName]);
+
+  // ⭐ Function to fetch reviews alone
+  const loadReviews = async (restaurant, item) => {
+    try {
+      console.log("Loading reviews for:", restaurant, item);
+      const data = await fetchReviews(restaurant, item);
+      console.log("Reviews loaded:", data);
+
+      setReviews(data.reviews || []);
+      setAvgRating(data.avg_rating || 0);
+      setReviewCount(data.review_count || 0);
+    } catch (err) {
+      console.error("Error loading reviews:", err);
+      // Don't show alert, just log the error
+    }
+  };
 
   if (loading) {
     return <p className="text-center py-5">Loading item details...</p>;
@@ -65,15 +90,42 @@ export default function ProductDetails() {
     setTimeout(() => setShowSuccess(false), 2500);
   };
 
-  const handleReviewSubmit = (reviewData) => {
-    console.log("Review submitted:", reviewData);
-    setShowReviewModal(false);
-    setShowReviewSubmitted(true);
-    setTimeout(() => setShowReviewSubmitted(false), 2500);
+  const handleReviewSubmit = async ({ rating, comment }) => {
+    try {
+      if (!rating) {
+        alert("Please select a rating");
+        return;
+      }
+
+      console.log("Submitting review:", { rating, comment });
+
+      const response = await addReview({
+        user_id: 1, // TODO: replace when auth added
+        restaurant_name: item.RestaurantName,
+        item_name: item.ItemName,
+        rating,
+        review: comment,
+      });
+
+      console.log("Review submitted successfully:", response);
+
+      // Reload reviews to show the new one
+      await loadReviews(item.RestaurantName, item.ItemName);
+
+      setShowReviewModal(false);
+      setShowReviewSubmitted(true);
+      setTimeout(() => setShowReviewSubmitted(false), 2500);
+    } catch (err) {
+      console.error("Review submit error:", err);
+      alert(
+        "Failed to submit review: " +
+          (err.response?.data?.message || err.message)
+      );
+    }
   };
 
   const imageUrl = item.ImageURL
-    ? `/${item.ImageURL}`
+    ? `http://localhost:4000/${item.ImageURL}`
     : "/restaurant.jpg";
 
   return (
@@ -84,7 +136,11 @@ export default function ProductDetails() {
           <div className="row align-items-center">
             <div
               className="col-lg-6"
-              style={{ width: "450px", marginRight: "70px", marginLeft: "50px" }}
+              style={{
+                width: "450px",
+                marginRight: "70px",
+                marginLeft: "50px",
+              }}
             >
               <img
                 src={imageUrl}
@@ -100,7 +156,7 @@ export default function ProductDetails() {
               <div className="d-flex align-items-center mb-3">
                 <span className="text-warning me-2">⭐</span>
                 <span className="fw-bold">
-                  {item.avg_rating} ({item.review_count})
+                  {avgRating} ({reviewCount})
                 </span>
               </div>
 
@@ -131,7 +187,9 @@ export default function ProductDetails() {
                   <button
                     key={size}
                     className={`btn ${
-                      selectedSize === size ? "btn-dark" : "btn-outline-secondary"
+                      selectedSize === size
+                        ? "btn-dark"
+                        : "btn-outline-secondary"
                     } px-4`}
                     onClick={() => setSelectedSize(size)}
                   >
@@ -170,10 +228,8 @@ export default function ProductDetails() {
               scrollBehavior: "smooth",
             }}
           >
-            {item.reviews && item.reviews.length > 0 ? (
-              item.reviews.map((review, i) => (
-                <ReviewCard key={i} review={review} />
-              ))
+            {reviews.length > 0 ? (
+              reviews.map((review, i) => <ReviewCard key={i} review={review} />)
             ) : (
               <p className="text-muted">No reviews yet.</p>
             )}
@@ -216,7 +272,9 @@ export default function ProductDetails() {
                       <h5 className="fw-bold">{rec.item_name}</h5>
                       <p className="text-muted mb-1">{rec.description}</p>
                       <div className="d-flex justify-content-between">
-                        <span className="fw-bold text-success">${rec.price}</span>
+                        <span className="fw-bold text-success">
+                          ${rec.price}
+                        </span>
                         <small className="text-muted">
                           ⭐ {rec.avg_rating} ({rec.review_count})
                         </small>
