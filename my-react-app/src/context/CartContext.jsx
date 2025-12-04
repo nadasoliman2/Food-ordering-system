@@ -42,7 +42,7 @@ export const CartProvider = ({ children }) => {
 
   const addToCart = async (
     product,
-    quantity = 2,
+    quantity = 1,
     size = "Medium",
     restaurantName = ""
   ) => {
