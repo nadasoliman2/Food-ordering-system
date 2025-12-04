@@ -1,4 +1,3 @@
-// src/pages/Cart.jsx
 import "bootstrap/dist/css/bootstrap.min.css";
 import { useCart } from "../context/CartContext";
 import { useNavigate } from "react-router-dom";
@@ -7,7 +6,6 @@ export default function Cart() {
   const navigate = useNavigate();
   const { cartItems, increaseQty, decreaseQty, removeFromCart } = useCart();
 
-  // Totals (computed on frontend)
   const itemsTotal = cartItems.reduce(
     (sum, item) => sum + item.price * item.quantity,
     0
@@ -19,7 +17,6 @@ export default function Cart() {
     <section className="py-5 bg-light min-vh-100">
       <div className="container" style={{ marginTop: "100px" }}>
         <div className="row gy-4">
-          {/* -------- Left: Cart Items -------- */}
           <div className="col-lg-8">
             <div className="bg-white p-4 rounded-3 shadow-sm">
               <h5 className="mb-4 fw-bold">Your Cart</h5>
@@ -34,13 +31,12 @@ export default function Cart() {
                     key={item.id}
                     className="d-flex align-items-center justify-content-between border-bottom py-3"
                   >
-                    {/* Product info */}
                     <div
                       className="d-flex align-items-center"
                       style={{ minWidth: "250px" }}
                     >
                       <img
-                        src={item.image}
+                        src={item.image || "/placeholder.jpg"}
                         alt={item.name}
                         style={{
                           width: "60px",
@@ -56,15 +52,12 @@ export default function Cart() {
                         </small>
                         {item.size && (
                           <div>
-                            <small className="text-muted">
-                              Size: {item.size}
-                            </small>
+                            <small className="text-muted">Size: {item.size}</small>
                           </div>
                         )}
                       </div>
                     </div>
 
-                    {/* Quantity controls */}
                     <div className="d-flex align-items-center">
                       <button
                         className="btn btn-outline-secondary btn-sm rounded-circle"
@@ -83,7 +76,6 @@ export default function Cart() {
                       </button>
                     </div>
 
-                    {/* Remove and Price */}
                     <div className="text-end" style={{ minWidth: "120px" }}>
                       <button
                         className="btn btn-link text-danger text-decoration-none p-0 small mb-1"
@@ -101,7 +93,6 @@ export default function Cart() {
             </div>
           </div>
 
-          {/* -------- Right: Order Summary -------- */}
           <div className="col-lg-4">
             <div
               className="bg-white p-4 rounded-3 shadow-sm position-sticky"
@@ -121,12 +112,10 @@ export default function Cart() {
                     <span className="text-muted">Delivery fee</span>
                     <span>${deliveryFee.toFixed(2)}</span>
                   </div>
-
                   <div className="d-flex justify-content-between fw-bold">
                     <span>Subtotal</span>
                     <span>${subtotal.toFixed(2)}</span>
                   </div>
-
                   <div className="text-center mt-4">
                     <button
                       className="btn w-100 d-flex align-items-center justify-content-center py-2 text-white"

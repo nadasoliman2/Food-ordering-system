@@ -1,12 +1,19 @@
 import { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useLocation } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
 import MenuFoodCard from "../Components/menuFoodCard";
 import { getRestaurantMenu, searchRestaurantItems } from "../services/menuApi";
 
 export function Menu() {
   const { restaurantName } = useParams();
+  const location = useLocation();
   const decodedRestaurantName = decodeURIComponent(restaurantName);
+
+  // ✅ Load image from state, localStorage, or fallback
+  const passedImage =
+    location.state?.restaurantImageUrl ||
+    localStorage.getItem("selectedRestaurantImage") ||
+    "/restaurant.jpg";
 
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
@@ -15,15 +22,14 @@ export function Menu() {
   const [restaurantDetails, setRestaurantDetails] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  // ✅ Fetch full menu
+  // ✅ Fetch menu data
   useEffect(() => {
     async function fetchMenuData() {
       try {
         setLoading(true);
         const res = await getRestaurantMenu(decodedRestaurantName);
-        console.log("Menu response:", res.data);
-
         const categories = res.data.data.categories || [];
+
         const allItems = categories.flatMap((cat) =>
           cat.items.map((item) => ({
             ...item,
@@ -34,12 +40,10 @@ export function Menu() {
 
         setRestaurantMenu(allItems);
         setAvailableCategories(["All", ...categories.map((cat) => cat.category_name)]);
+
         setRestaurantDetails({
           name: decodedRestaurantName,
-          imageUrl:
-            categories[0]?.image_url
-              ? `http://localhost:4000/${categories[0].image_url}`
-              : "/restaurant.jpg",
+          imageUrl: passedImage,
         });
       } catch (error) {
         console.error(error);
@@ -49,9 +53,16 @@ export function Menu() {
     }
 
     fetchMenuData();
-  }, [decodedRestaurantName]);
+  }, [decodedRestaurantName, passedImage]);
 
-  // ✅ Search handler (debounced)
+  // ✅ Cleanup — save image if needed (maintain persistency)
+  useEffect(() => {
+    if (passedImage) {
+      localStorage.setItem("selectedRestaurantImage", passedImage);
+    }
+  }, [passedImage]);
+
+  // ✅ Handle search
   useEffect(() => {
     const delay = setTimeout(async () => {
       if (!searchTerm.trim()) {
@@ -91,10 +102,15 @@ export function Menu() {
   return (
     <section className="py-5">
       <div className="container" style={{ paddingTop: "80px" }}>
+        {/* ✅ Restaurant Header */}
         {restaurantDetails && (
           <div className="text-center mb-5">
             <img
-              src={restaurantDetails.imageUrl}
+              src={
+                restaurantDetails.imageUrl?.startsWith("http")
+                  ? restaurantDetails.imageUrl
+                  : restaurantDetails.imageUrl?.replace(/^\/+/, "")
+              }
               alt={restaurantDetails.name}
               className="rounded-4 mb-3"
               style={{
@@ -135,45 +151,68 @@ export function Menu() {
 
         {/* Categories */}
         <div className="overflow-auto mb-5" style={{ whiteSpace: "nowrap" }}>
-          <div className="d-inline-flex gap-4 pb-3" style={{ marginTop: "5px" }}>
-            {availableCategories.map((category, index) => (
-              <div
-                key={index}
-                className="text-center"
-                onClick={() => setSelectedCategory(category)}
-                style={{
-                  cursor: "pointer",
-                  minWidth: "80px",
-                  opacity: selectedCategory === category ? 1 : 0.7,
-                  transform:
-                    selectedCategory === category ? "scale(1.1)" : "scale(1)",
-                  transition: "all 0.3s",
-                }}
-              >
+          <div className="d-inline-flex gap-4 pb-3">
+            {availableCategories.map((category, index) => {
+              const catData =
+                category === "All"
+                  ? { category_name: "All" }
+                  : restaurantMenu.find((item) => item.category_name === category);
+
+              const categoryImage = catData?.image_url
+                ? `/${catData.image_url}`
+                : "/category-placeholder.jpg";
+
+              return (
                 <div
-                  className="rounded-circle d-flex align-items-center justify-content-center mx-auto mb-2"
+                  key={index}
+                  className="text-center"
+                  onClick={() => setSelectedCategory(category)}
                   style={{
-                    width: "60px",
-                    height: "60px",
-                    border:
-                      selectedCategory === category
-                        ? "3px solid #81A4A6"
-                        : "none",
-                    backgroundColor:
-                      selectedCategory === category ? "#81A4A6" : "#f8f9fa",
+                    cursor: "pointer",
+                    minWidth: "80px",
+                    opacity: selectedCategory === category ? 1 : 0.7,
+                    transform:
+                      selectedCategory === category ? "scale(1.1)" : "scale(1)",
+                    transition: "all 0.3s",
                   }}
                 >
-                  <span style={{ fontSize: "30px" }}>🍽️</span>
+                  <div
+                    className="rounded-circle overflow-hidden d-flex align-items-center justify-content-center mx-auto mb-2"
+                    style={{
+                      width: "60px",
+                      height: "60px",
+                      border:
+                        selectedCategory === category
+                          ? "3px solid #81A4A6"
+                          : "none",
+                      backgroundColor:
+                        selectedCategory === category ? "#fff" : "#f8f9fa",
+                    }}
+                  >
+                    {category !== "All" ? (
+                      <img
+                        src={categoryImage}
+                        alt={category}
+                        style={{
+                          width: "100%",
+                          height: "100%",
+                          objectFit: "cover",
+                        }}
+                      />
+                    ) : (
+                      <span style={{ fontSize: "30px" }}>🍽️</span>
+                    )}
+                  </div>
+                  <small
+                    className={`${
+                      selectedCategory === category ? "fw-bold" : ""
+                    }`}
+                  >
+                    {category}
+                  </small>
                 </div>
-                <small
-                  className={`${
-                    selectedCategory === category ? "fw-bold" : ""
-                  }`}
-                >
-                  {category}
-                </small>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 

@@ -1,4 +1,3 @@
-// src/Components/RestaurantCard.jsx
 import React from "react";
 import { FaStar } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
@@ -8,18 +7,29 @@ export default function RestaurantCard({ id, name, rating, imageUrl }) {
   const navigate = useNavigate();
 
   const handleExploreClick = () => {
-    navigate(`/menu/${name}`);
+
+    console.log("Navigating with image:", imageUrl);
+    
+    // ✅ Persist image in localStorage for refresh support
+  
+    localStorage.setItem("selectedRestaurantImage", imageUrl);
+
+    navigate(`/menu/${encodeURIComponent(name)}`, {
+      state: { restaurantImageUrl: imageUrl },
+    });
   };
 
   return (
-    <div className="restaurant-card d-flex justify-content-between align-items-center p-3 my-3 rounded-4" style={{ backgroundColor: '#EDF3F3' }}>
-      {/* Left side - image, name, rating */}
+    <div
+      className="restaurant-card d-flex justify-content-between align-items-center p-3 my-3 rounded-4"
+      style={{ backgroundColor: "#EDF3F3" }}
+    >
       <div className="d-flex align-items-center">
         <img
           src={
-            imageUrl.startsWith("http")
+            imageUrl?.startsWith("http")
               ? imageUrl
-              : `http://localhost:4000/${imageUrl.replace(/^\/+/, "")}`
+              : imageUrl?.replace(/^\/+/, "")
           }
           alt={name}
           className="rounded-4 me-3"
@@ -31,11 +41,9 @@ export default function RestaurantCard({ id, name, rating, imageUrl }) {
             <FaStar className="me-1" color="#FFC107" />
             <span>{rating}</span>
           </div>
-
         </div>
       </div>
 
-      {/* Explore Button */}
       <button
         className="btn btn-secondary rounded-pill px-3 d-flex align-items-center"
         onClick={handleExploreClick}

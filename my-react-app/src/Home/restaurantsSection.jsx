@@ -53,7 +53,7 @@ export default function RestaurantsSection() {
                   name={restaurant.restaurant_name}
                   image={
                     restaurant.image_url
-                      ? `http://localhost:4000/${restaurant.image_url}`
+                      ? `${restaurant.image_url}`
                       : "/restaurant.jpg"
                   }
                 />

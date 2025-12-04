@@ -1,4 +1,3 @@
-// src/pages/Restaurants.jsx
 import React, { useEffect, useState } from "react";
 import RestaurantCard from "../Components/RestaurantCard";
 import { getRestaurants, searchRestaurants } from "../services/restaurantApi";
@@ -26,19 +25,18 @@ export default function Restaurants() {
     fetchRestaurants();
   }, []);
 
-  // Handle search input (calls API /search endpoint)
+  // Handle search
   const handleSearchChange = async (e) => {
     const searchValue = e.target.value;
     setSearchTerm(searchValue);
 
     if (searchValue.trim() === "") {
-      // If search box is cleared, reload all restaurants
       const res = await getRestaurants();
       setRestaurants(res.data.data.restaurants);
     } else {
       try {
         const res = await searchRestaurants(searchValue);
-        setRestaurants(res.data.data.results); // results array from API
+        setRestaurants(res.data.data.results);
       } catch (err) {
         console.error("Error searching restaurants:", err);
       }
@@ -48,7 +46,10 @@ export default function Restaurants() {
   return (
     <div className="container py-5" style={{ paddingTop: "100px" }}>
       {/* Search bar */}
-      <div className="row justify-content-center mb-4" style={{ marginTop: "100px" }}>
+      <div
+        className="row justify-content-center mb-4"
+        style={{ marginTop: "100px" }}
+      >
         <div className="col-md-6">
           <input
             type="text"
@@ -72,7 +73,6 @@ export default function Restaurants() {
             rating={rest.rating}
             imageUrl={rest.image_url}
             id={index}
-           
           />
         ))
       ) : (

@@ -34,7 +34,7 @@ export default function MenuFoodCard({ item }) {
         }}
       >
         <img
-          src={item.image_url}
+          src={`/${item.image_url}`}
           alt={item.item_name}
           className="w-100 h-100"
           style={{ objectFit: 'cover' }}
