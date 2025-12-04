@@ -6,7 +6,7 @@ const CartContext = createContext();
 
 export const CartProvider = ({ children }) => {
   const [cartItems, setCartItems] = useState([]);
-  const userId = 1; // 🔐 Replace this with real logged‑in user ID later
+  const userId = 2; // 🔐 Replace this with real logged‑in user ID later
 
   // ✅ Load cart from backend on mount
   useEffect(() => {

@@ -1,25 +1,44 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import { getOrderProfile } from '../services/profileorder';
 import Address from './components/address';
 import Payment from './components/payment';
+import Accountsetting from './components/accountsetting';
+import { getaccount } from '../services/accountApi';
+// ==========================
 // Sidebar Component
+// ==========================
 const Sidebar = ({ activeTab, setActiveTab }) => {
   const menuItems = [
     { icon: '📦', label: 'My Orders', id: 'orders' },
     { icon: '📍', label: 'My Addresses', id: 'addresses' },
     { icon: '💳', label: 'My Payments', id: 'payments' },
+      { icon: '⚙️', label: 'Account Settings', id: 'accountSettings' }
 
   ];
-
+   const [account, setAccount] = useState(null);
+ 
+   useEffect(() => {
+     const fetchAcc = async () => {
+       try {
+         const res = await getaccount(1); // user id
+         setAccount(res.data.data.account);
+       } catch (err) {
+         console.log("Error fetching account:", err);
+       }
+     };
+     fetchAcc();
+   }, []);
+ 
+   if (!account) return <p>Loading...</p>;
+ 
+   const { username} = account;
+ 
   return (
     <div className="bg-white rounded shadow-sm p-4" style={{ position: 'sticky', top: '20px' }}>
       <div className="text-center mb-4">
-        <div className="rounded-circle mx-auto mb-3" style={{
-          width: '64px',
-          height: '64px',
-          background: 'linear-gradient(135deg, #fbbf24 0%, #f97316 100%)'
-        }}></div>
-        <p className="fw-semibold text-dark">Maryam Hendoway</p>
+      
+        <p className="fw-semibold " style={{color:" #69a297" ,fontSize:"20px"}}>{username}</p>
       </div>
 
       <div className="d-flex flex-column gap-2">
@@ -34,7 +53,7 @@ const Sidebar = ({ activeTab, setActiveTab }) => {
               border: 'none',
               padding: '12px 16px',
               fontSize: '14px',
-              fontWeight: '500'
+              fontWeight: '500',
             }}
           >
             <span style={{ fontSize: '18px' }}>{item.icon}</span>
@@ -43,7 +62,10 @@ const Sidebar = ({ activeTab, setActiveTab }) => {
         ))}
       </div>
 
-      <button className="btn w-100 mt-4 d-flex align-items-center justify-content-center gap-2" style={{"backgroundColor": "#69a297", color: "white"}}>
+      <button
+        className="btn w-100 mt-4 d-flex align-items-center justify-content-center gap-2"
+        style={{ backgroundColor: '#69a297', color: 'white' }}
+      >
         <span>🚪</span>
         <span>Log Out</span>
       </button>
@@ -51,150 +73,125 @@ const Sidebar = ({ activeTab, setActiveTab }) => {
   );
 };
 
-// Order Card Component
-const OrderCard = ({ order }) => (
-  <div className="card border-0 shadow-sm mb-3 hover-shadow" style={{ transition: 'all 0.2s' }}
-    onMouseEnter={(e) => e.currentTarget.classList.add('shadow-lg')}
-    onMouseLeave={(e) => e.currentTarget.classList.remove('shadow-lg')}
-  >
-    <div className="card-body">
-      <div className="row mb-3">
-        <div className="col-md-3">
-          <p className="text-muted mb-1" style={{ fontSize: '14px' }}>Order Delivered</p>
-          <p style={{ fontSize: '12px', color: '#999' }}>{order.date}</p>
-        </div>
-
-        <div className="col-md-3">
-          <p className="fw-bold" style={{ fontSize: '24px', color: '#1f2937' }}>{order.amount}</p>
-          <p style={{ fontSize: '12px', color: '#999' }}>{order.paymentMethod}</p>
-        </div>
-
-        <div className="col-md-3">
-          <p className="text-muted mb-1" style={{ fontSize: '14px' }}>Items</p>
-          <p className="fw-semibold" style={{ fontSize: '18px' }}>{order.items}</p>
-        </div>
-
-        <div className="col-md-3 d-flex align-items-center justify-content-between">
-          <span className={`fw-semibold ${order.statusColor === 'text-success' ? 'text-success' : 'text-danger'}`}
-            style={{ fontSize: '14px' }}>
+// ==========================
+// OrderCard Component
+// ==========================
+const OrderCard = ({ order }) => {
+  return (
+    <div className="card mb-4 shadow-sm">
+      <div className="card-body">
+        {/* Order Header */}
+        <div className="d-flex justify-content-between align-items-center mb-3">
+          <div>
+            <h5 className="fw-bold mb-1">Order #{order.order_number}</h5>
+            <p className="mb-0 text-muted" style={{ fontSize: '13px' }}>{order.date}</p>
+          </div>
+          <span
+            className={`fw-semibold ${
+              order.status === 'Delivered' ? 'text-success' : 'text-danger'
+            }`}
+          >
             {order.status}
           </span>
-          <button className="btn btn-link text-success p-0" style={{ fontSize: '14px', textDecoration: 'none' }}>
-            View Details →
-          </button>
         </div>
-      </div>
 
-      <div className="d-flex gap-2">
-        {[...Array(order.items)].map((_, i) => (
-          <div key={i} className="rounded-circle d-flex align-items-center justify-content-center"
-            style={{
-              width: '32px',
-              height: '32px',
-              backgroundColor: '#fef3c7',
-              fontSize: '18px'
-            }}>
-            🍔
+        {/* Items Grid */}
+        <div className="row mb-3">
+          {order.itemsList.map((item, idx) => (
+            <div key={idx} className="col-6 mb-3">
+              <div className="border rounded p-2 h-100 d-flex flex-column align-items-center text-center">
+                <img
+                  src={item.image_url}
+                  alt={item.item_name}
+                  style={{ width: '100px', height: '100px', objectFit: 'cover', borderRadius: '8px' }}
+                />
+                <p className="fw-semibold mb-1 mt-2">{item.item_name}</p>
+                <p className="text-muted mb-1" style={{ fontSize: '13px' }}>Qty: {item.quantity}</p>
+                <p className="fw-bold mb-0">${item.price}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Delivery Fee & Total */}
+        <div className="d-flex justify-content-end gap-3 border-top pt-2">
+          <div>
+            <span className="text-muted" style={{ fontSize: '13px' }}>Delivery Fee:</span>{' '}
+            <span className="fw-semibold">${order.delivery_fee}</span>
           </div>
-        ))}
-      </div>
-    </div>
-  </div>
-);
-
-// Orders List Component
-const OrdersList = () => {
-  const [activeFilterTab, setActiveFilterTab] = useState('All');
-  
-  const orders = [
-    {
-      id: 1,
-      date: 'Apr 5, 2025, 10:07 AM',
-      amount: '$64',
-      paymentMethod: 'Paid with Cash',
-      items: 6,
-      status: 'Completed',
-      statusColor: 'text-success'
-    },
-    {
-      id: 2,
-      date: 'Apr 5, 2025, 10:07 AM',
-      amount: '$64',
-      paymentMethod: 'Paid with Cash',
-      items: 6,
-      status: 'Cancelled',
-      statusColor: 'text-danger'
-    }
-  ];
-
-  const filterTabs = ['All', 'In Progress', 'Delivered', 'Cancelled'];
-
-  return (
-    <div>
-      <h2 className="fw-bold mb-4" style={{ fontSize: '28px', color: '#1f2937' }}>My Orders</h2>
-
-      <div className="border-bottom mb-4 d-flex gap-2">
-        {filterTabs.map((tab) => (
-          <button
-            key={tab}
-            onClick={() => setActiveFilterTab(tab)}
-            className="btn btn-link p-3 fw-semibold"
-            style={{
-              fontSize: '14px',
-              color: activeFilterTab === tab ? '#16a34a' : '#999',
-              borderBottom: activeFilterTab === tab ? '2px solid #16a34a' : 'none',
-              textDecoration: 'none',
-              cursor: 'pointer'
-            }}
-          >
-            {tab}
-          </button>
-        ))}
-      </div>
-
-      <div>
-        {orders.map((order) => (
-          <OrderCard key={order.id} order={order} />
-        ))}
+          <div>
+            <span className="text-muted" style={{ fontSize: '13px' }}>Grand Total:</span>{' '}
+            <span className="fw-bold">${order.grand_total}</span>
+          </div>
+        </div>
       </div>
     </div>
   );
 };
 
-// Main Profile Page Component
+// ==========================
+// OrdersList Component
+// ==========================
+const OrdersList = () => {
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchOrders = async () => {
+      try {
+        const res = await getOrderProfile(5);
+        const data = res.data.data.orders.map((order) => ({
+          order_id: order.order_id,
+          order_number: order.order_number,
+          date: order.order_date_formatted,
+          status: order.order_status,
+          itemsList: order.items,
+          delivery_fee: order.delivery_fee,
+          grand_total: order.grand_total,
+        }));
+        setOrders(data);
+        
+      } catch (err) {
+        console.error('Error fetching orders:', err);
+      }
+      setLoading(false);
+    };
+
+    fetchOrders();
+  }, []);
+
+  if (loading) return <p>Loading...</p>;
+
+  return (
+    <div>
+      <h2 className="fw-bold mb-4" style={{ fontSize: '28px', color: '#1f2937' }}>My Orders</h2>
+      {orders.map((order) => (
+        <OrderCard key={order.order_id} order={order} />
+      ))}
+    </div>
+  );
+};
+
+// ==========================
+// Main Profile Component
+// ==========================
 export default function Profile() {
   const [activeTab, setActiveTab] = useState('orders');
 
   return (
-    <div className="py-5 bg-light min-vh-100 " >
-      <div className="container-lg py-3" style={{ marginTop: "100px" }}>
+    <div className="py-5 bg-light min-vh-100">
+      <div className="container-lg py-3" style={{ marginTop: '100px' }}>
         <div className="row g-4">
           <div className="col-lg-3">
             <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
           </div>
-
           <div className="col-lg-9">
             {activeTab === 'orders' && <OrdersList />}
-            {activeTab === 'addresses' && (
-             <Address/>
-            )}
-            {activeTab === 'payments' && (
-              <Payment/>
-            )}
-            {activeTab === 'settings' && (
-              <div className="card border-0 shadow-sm">
-                <div className="card-body text-center">
-                  <p className="text-muted">⚙️ Settings</p>
-                </div>
-              </div>
-            )}
-            {activeTab === 'help' && (
-              <div className="card border-0 shadow-sm">
-                <div className="card-body text-center">
-                  <p className="text-muted">💬 Help</p>
-                </div>
-              </div>
-            )}
+            {activeTab === 'addresses' && <Address />}
+            {activeTab === 'payments' && <Payment />}
+{activeTab === 'accountSettings' && <Accountsetting />}
+
+
           </div>
         </div>
       </div>

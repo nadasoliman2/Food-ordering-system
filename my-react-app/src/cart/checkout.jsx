@@ -62,7 +62,8 @@ export default function Checkout() {
     <section className="py-5 bg-light min-vh-100">
       <div className="container" style={{ marginTop: "80px", maxWidth: "700px" }}>
         <button
-          className="btn btn-link text-decoration-none mb-3"
+        style={{ color: "#81A4A6", fontWeight:"bold"}}
+          className="btn btn-link text-decoration-none  text-main mb-3"
           onClick={() => navigate(-1)}
         >
           ← Back
