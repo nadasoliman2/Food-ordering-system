@@ -4,16 +4,15 @@ import {
   getCartAPI,
   removeFromCartAPI,
   incrementCartItemAPI,
-  decrementCartItemAPI
+  decrementCartItemAPI,
 } from "../services/cartApi";
 
 const CartContext = createContext();
 
 export const CartProvider = ({ children }) => {
   const [cartItems, setCartItems] = useState([]);
-  const userId = 2; // 🔐 Replace this with real logged‑in user ID later
+  const userId = 1; // temporary static user id
 
-  // Load cart when mount
   useEffect(() => {
     loadCart();
   }, []);
@@ -23,22 +22,19 @@ export const CartProvider = ({ children }) => {
       const res = await getCartAPI(userId);
       const data = res.data.data;
 
-      setCartItems((prev) => {
-        const formatted = data.items.map((item, index) => {
-          // Try to get restaurant if known from previous list
-          const old = prev.find((p) => p.name === item.ItemName && p.size === item.Size);
-          return {
-            id: index,
-            name: item.ItemName,
-            price: parseFloat(item.Price),
-            quantity: item.Quantity,
-            size: item.Size,
-            restaurant: item.RestaurantName || old?.restaurant || "",
-            subtotal: parseFloat(item.subtotal),
-          };
-        });
-        return formatted;
-      });
+      if (!data || !data.items) return;
+
+      const formatted = data.items.map((item) => ({
+        id: `${item.ItemName}-${item.Size}-${item.RestaurantName || ""}`,
+        name: item.ItemName,
+        price: parseFloat(item.Price),
+        quantity: item.Quantity,
+        size: item.Size,
+        restaurant: item.RestaurantName || "",
+        subtotal: parseFloat(item.subtotal || 0),
+      }));
+      console.log("Cart data from backend:", data.items);
+      setCartItems(formatted);
     } catch (err) {
       console.error("Error fetching cart:", err);
     }
@@ -46,7 +42,7 @@ export const CartProvider = ({ children }) => {
 
   const addToCart = async (
     product,
-    quantity = 1,
+    quantity = 2,
     size = "Medium",
     restaurantName = ""
   ) => {
@@ -58,7 +54,6 @@ export const CartProvider = ({ children }) => {
         quantity,
         size,
       };
-      console.log("Adding to cart:", payload);
       await addToCartAPI(payload);
       await loadCart();
     } catch (err) {
@@ -66,7 +61,6 @@ export const CartProvider = ({ children }) => {
     }
   };
 
-  // delete item both backend + local list
   const removeFromCart = async (id) => {
     try {
       const item = cartItems.find((i) => i.id === id);
@@ -75,20 +69,20 @@ export const CartProvider = ({ children }) => {
       const payload = {
         user_id: userId,
         item_name: item.name,
-        restaurant_name: item.restaurant || "", // crucial field for backend
+        restaurant_name: item.restaurant,
         size: item.size,
       };
 
-      console.log("Deleting cart item:", payload);
-      const res = await removeFromCartAPI(payload);
-      console.log("Backend response →", res.data);
-      await loadCart();
+      await removeFromCartAPI(payload);
+
+      // update UI instantly
+      setCartItems((prev) => prev.filter((i) => i.id !== id));
     } catch (err) {
       console.error("Error removing from cart:", err);
     }
   };
 
-  // Backend‑linked Increment
+  // 👇 Optimistic increment update
   const increaseQty = async (id) => {
     const item = cartItems.find((i) => i.id === id);
     if (!item) return;
@@ -101,18 +95,19 @@ export const CartProvider = ({ children }) => {
     };
 
     try {
+      await incrementCartItemAPI(payload);
 
-      console.log("Increment payload:", payload); // ✅ Outgoing payload
-      const res = await incrementCartItemAPI(payload); // 🧠 API call
-      console.log("Increment API response:", res.data);
-      await loadCart();
-      console.log("Increment payload:", payload);
+      setCartItems((prev) =>
+        prev.map((i) =>
+          i.id === id ? { ...i, quantity: i.quantity + 1 } : i
+        )
+      );
     } catch (err) {
       console.error("Error incrementing quantity:", err);
     }
   };
 
-  // Backend‑linked Decrement
+  // 👇 Optimistic decrement update
   const decreaseQty = async (id) => {
     const item = cartItems.find((i) => i.id === id);
     if (!item) return;
@@ -123,11 +118,19 @@ export const CartProvider = ({ children }) => {
       restaurant_name: item.restaurant,
       size: item.size,
     };
-    
+
     try {
-      console.log("Decrementing item:", payload);
       await decrementCartItemAPI(payload);
-      await loadCart(); // refresh no matter update or removal
+
+      if (item.quantity === 1) {
+        setCartItems((prev) => prev.filter((i) => i.id !== id));
+      } else {
+        setCartItems((prev) =>
+          prev.map((i) =>
+            i.id === id ? { ...i, quantity: i.quantity - 1 } : i
+          )
+        );
+      }
     } catch (err) {
       console.error("Error decrementing quantity:", err);
     }
@@ -141,6 +144,7 @@ export const CartProvider = ({ children }) => {
         removeFromCart,
         increaseQty,
         decreaseQty,
+        loadCart,
       }}
     >
       {children}

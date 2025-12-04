@@ -125,7 +125,7 @@ export default function ProductDetails() {
   };
 
   const imageUrl = item.ImageURL
-    ? `http://localhost:4000/${item.ImageURL}`
+    ? `/${item.ImageURL}`
     : "/restaurant.jpg";
 
   return (
