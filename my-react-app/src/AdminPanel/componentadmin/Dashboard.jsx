@@ -38,7 +38,7 @@ export default function Dashboard() {
         borderRadius: '12px',
       }}
     >
-      <h1>Food Order System Admin Dashboard</h1>
+      <h1 className='mb-4'  >Food Order System Admin Dashboard</h1>
 
       {/* Charts Section */}
       <div

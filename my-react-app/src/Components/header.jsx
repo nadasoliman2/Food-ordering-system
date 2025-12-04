@@ -11,7 +11,7 @@ export default function Header() {
   };
 
     return (<div className="sushi-banner container-fluid " style={{ backgroundColor: '#81A4A6', paddingTop: '8rem' }}>
-        <div className="row align-items-center w-[70%] mx-auto">
+        <div className="row align-items-center w-[8a0%] mx-auto container">
             {/* Text Column (Takes 6/12 columns on medium screens and up) */}
             <div className="col-md-6 text-black p-4">
                 <h2 className="display-4 fw-bold mb-3">

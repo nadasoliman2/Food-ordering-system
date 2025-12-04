@@ -1,30 +1,38 @@
 import { useNavigate } from "react-router-dom";
 
-export default function RestaurantHomeCard({ name, image}) {
+export default function RestaurantHomeCard({ name, image }) {
   const navigate = useNavigate();
 
   return (
     <button
-      className="category-card text-center d-flex flex-column align-items-center justify-content-center mx-2"
+      className="category-card d-flex flex-column align-items-center justify-content-center mx-2 p-3"
       style={{
-        backgroundColor: "#EDF3F3",
-        borderRadius: 80,
+        backgroundColor: " rgb(237, 243, 243)", // خلفية رئيسية للكارد
+        borderRadius: "20px",
         border: "none",
-        width: "100px",
-        height: "150px",
-        padding: "10px",
-        boxShadow: "0 2px 6px rgba(0,0,0,0.05)",
-        transition: "transform 0.2s",
+        width: "120px",
+        height: "160px",
+        color: "rgba(var(--bs-dark-rgb),",
+        overflow: "hidden",
+        position: "relative",
+    
+        transition: "transform 0.3s, box-shadow 0.3s",
       }}
-      onClick={() => navigate(`/menu/${encodeURIComponent(name)}`)}// ✅ navigate to menu
-      onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.04)")}
-      onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
+      onClick={() => navigate(`/menu/${encodeURIComponent(name)}`)} // navigate to menu
+      onMouseEnter={(e) => {
+        e.currentTarget.style.transform = "scale(1.05)";
+        e.currentTarget.style.boxShadow = "0 8px 16px rgba(0,0,0,0.3)";
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.transform = "scale(1)";
+        e.currentTarget.style.boxShadow = "0 4px 8px rgba(0,0,0,0.2)";
+      }}
     >
+      {/* صورة دائرية */}
       <div
-        className="category-image-wrapper mb-1"
+        className="category-image-wrapper mb-2"
         style={{
           marginTop: "-0.5rem",
-      
         }}
       >
         <img
@@ -32,16 +40,21 @@ export default function RestaurantHomeCard({ name, image}) {
           alt={name}
           className="img-fluid rounded-circle"
           style={{
-            width: "70px",
-            height: "70px",
+            width: "80px",
+            height: "80px",
             objectFit: "cover",
+            border: "2px solid white",
           }}
         />
       </div>
 
+      {/* اسم المطعم */}
       <h6
-        className="category-name mt-2 fw-bold text-dark text-center"
-        style={{ paddingBottom: 10, fontSize: "0.9rem" }}
+        className="fw-bold text-center"
+        style={{
+          paddingBottom: 10,
+          fontSize: "0.9rem",
+        }}
       >
         {name}
       </h6>

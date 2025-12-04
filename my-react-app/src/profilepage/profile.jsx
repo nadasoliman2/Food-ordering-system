@@ -103,7 +103,7 @@ const OrderCard = ({ order }) => {
                 <img
                   src={item.image_url}
                   alt={item.item_name}
-                  style={{ width: '100px', height: '100px', objectFit: 'cover', borderRadius: '8px' }}
+                  style={{ width: '150px', height: '100px', objectFit: 'cover', borderRadius: '8px' }}
                 />
                 <p className="fw-semibold mb-1 mt-2">{item.item_name}</p>
                 <p className="text-muted mb-1" style={{ fontSize: '13px' }}>Qty: {item.quantity}</p>
@@ -164,7 +164,7 @@ const OrdersList = () => {
 
   return (
     <div>
-      <h2 className="fw-bold mb-4" style={{ fontSize: '28px', color: '#1f2937' }}>My Orders</h2>
+      <h2 className="fw-bold mb-4" style={{ fontSize: '28px', color: '#69a297' }}>My Orders</h2>
       {orders.map((order) => (
         <OrderCard key={order.order_id} order={order} />
       ))}

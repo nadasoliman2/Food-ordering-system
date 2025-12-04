@@ -117,3 +117,6 @@ body {
     /* تثبيت لون الحدود على اللون الرمادي الفاتح أو اللون الذي تفضلينه */
     border-color: #ced4da !important; /* لون حدود Bootstrap الافتراضي */
 }
+.sign:hover{
+   background-color: #55877e
+}

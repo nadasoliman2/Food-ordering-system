@@ -116,7 +116,7 @@ export default function AppNavbar() {
         </div>
 
         <div className="d-flex align-items-center custom-actions">
-          <NavLink to="/auth/login" className="btn me-3 custom-signin-btn">
+          <NavLink to="/auth/login" className="btn me-3  sign " style={{  borderRadius: "20px",}}>
             Sign In
           </NavLink>
 

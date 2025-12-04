@@ -8,7 +8,7 @@ export default function Accountsetting() {
   useEffect(() => {
     const fetchAcc = async () => {
       try {
-        const res = await getaccount(1); // user id
+        const res = await getaccount(3); // user id
         setAccount(res.data.data.account);
       } catch (err) {
         console.log("Error fetching account:", err);

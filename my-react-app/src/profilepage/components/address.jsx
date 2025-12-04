@@ -24,7 +24,13 @@ const AddressCard = ({ address, selectedId, onSelect, onEdit, onDelete }) => (
         checked={selectedId === address.address_id}
         readOnly
         className="form-check-input me-3"
-        style={{ width: '20px', height: '20px' }}
+    tyle={{
+    width: '20px',
+    height: '20px',
+    accentColor: '#69a297', // اللون اللي هيظهر عند التحديد
+    backgroundColor: 'white', // ممكن يظهر في بعض المتصفحات كخلفية
+    border: '1px solid white', // يحدد حدود الدائرة
+  }}
       />
       <div className="me-auto">
         <p className="fw-bold mb-1" style={{ fontSize: '16px' }}>{address.address}</p>
@@ -117,7 +123,7 @@ export default function Address() {
   return (
     <div className="min-vh-100">
       <div className="container-lg py-3">
-        <h2 className="fw-bold mb-4" style={{ fontSize: '28px', color: '#1f2937' }}>My Addresses</h2>
+        <h2 className="fw-bold mb-4" style={{ fontSize: '28px', color: '#69a297' }}>My Addresses</h2>
 
         {/* Addresses List */}
         <div>

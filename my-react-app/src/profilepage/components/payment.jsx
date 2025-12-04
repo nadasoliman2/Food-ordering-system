@@ -97,7 +97,7 @@ export default function Payment() {
 
     return (
         <div style={styles.pageContainer}>
-            <h2 className="fw-bold">My Payment Methods</h2>
+            <h2 className="fw-bold mb-4" style={{color:"#69a297"}}>My Payment Methods</h2>
 
             <div className="payment-methods-list">
                 {payments.map(method => (

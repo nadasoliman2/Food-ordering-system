@@ -45,7 +45,7 @@ export default function RestaurantsSection() {
             No restaurants found.
           </p>
         ) : (
-          <div className="position-relative d-flex align-items-center">
+          <div className="position-relative d-flex align-items-center" style={{justifyContent:"center"}}>
             <div className="d-flex flex-nowrap overflow-auto py-3">
               {restaurants.map((restaurant, index) => (
                 <RestaurantHomeCard
