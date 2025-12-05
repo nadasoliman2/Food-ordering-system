@@ -1,7 +1,7 @@
 import "./App.css";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import Home from "./Home/home";
-import React from "react";
+import React, { useContext } from "react";
 import Layout from "./layout";
 import { Menu } from "./Menu/menu";
 import Cart from "./cart/Cart.jsx";
@@ -9,7 +9,6 @@ import Login from "./auth/login/login.jsx";
 import Register from "./auth/register/register.jsx";
 import AdminLogin from "./auth/login/adminlogin/adminlogin.jsx";
 import ProductDetails from "./Menu/productDetails.jsx";
-import { CartProvider } from "./context/CartContext";
 import AboutUs from "./AboutUs/AboutUs.jsx";
 import Profile from "./profilepage/profile.jsx";
 import Restaurants from "./restaurants/restaurants.jsx";
@@ -19,53 +18,56 @@ import OrderReport from "./AdminPanel/componentadmin/OrderReport.jsx";
 import SalesReport from "./AdminPanel/componentadmin/SalesReport.jsx";
 import Checkout from "./cart/checkout.jsx";
 import OrderStatus from "./cart/orderStatus.jsx";
-import { AuthProvider } from "./context/AuthContext";
-
+import { AuthContext } from "./context/AuthContext";
 
 function App() {
+  const { user } = useContext(AuthContext);
+
   return (
     <>
-     <AuthProvider>
-      <CartProvider>
-        <Routes>
-          {/* Layout ثابت طول الموقع */}
-          <Route path="/" element={<Layout />}>
-            {/* دي اللي بتخلي أول صفحة تظهر هي Home */}
-            <Route index element={<Home />} />
+      <Routes>
+        <Route path="/" element={<Layout />}>
+          <Route index element={<Home />} />
 
-            {/* دي اللي بتخلي أول صفحة تظهر هي Home */}
-            <Route index element={<Home />} />
+          <Route path="/restaurants" element={<Restaurants />} />
+          <Route path="/menu/:restaurantName" element={<Menu />} />
+          <Route path="/cart" element={<Cart />} />
 
-            {/* صفحات تانية لو عايزة */}
-            {/* <Route path="menu" element={<Menu />} /> */}
-            <Route path="/restaurants" element={<Restaurants/>} />
-            <Route path="/menu/:restaurantName" element={<Menu />} />
-            <Route path="/cart" element={<Cart />} />
-            <Route path="/checkout" element={<Checkout />} />
-            <Route path="/orderStatus" element={<OrderStatus />} />
-            <Route path="/product/:restaurantName/:itemName" element={<ProductDetails />} />
-            <Route path="/about" element={<AboutUs />} />
-            <Route path="/profile" element={<Profile />} />
+          {/* Checkout Route محمي */}
+          <Route
+            path="/checkout"
+            element={
+              user ? (
+                <Checkout />
+              ) : (
+                <Navigate to="/auth/login?redirect=/checkout" replace />
+              )
+            }
+          />
 
-          </Route>
+          <Route path="/orderStatus" element={<OrderStatus />} />
 
-          <Route path="/auth/login" element={<Login />} />
-          <Route path="/auth/register" element={<Register />} />
+          <Route
+            path="/product/:restaurantName/:itemName"
+            element={<ProductDetails />}
+          />
 
+          <Route path="/about" element={<AboutUs />} />
+          <Route path="/profile" element={<Profile />} />
+        </Route>
 
-          <Route path="/auth/login/adminlogin" element={<AdminLogin />} />
+        {/* Auth */}
+        <Route path="/auth/login" element={<Login />} />
+        <Route path="/auth/register" element={<Register />} />
+        <Route path="/auth/login/adminlogin" element={<AdminLogin />} />
 
-   <Route path="/admin" element={<LayoutAdmin />}>
-  <Route index element={<Dashboard />} />
-  <Route path="orders" element={<OrderReport />} />
-  <Route path="sales" element={<SalesReport />} />
-</Route>
-
-                                         
-
-        </Routes>
-      </CartProvider>
-      </AuthProvider>
+        {/* Admin */}
+        <Route path="/admin" element={<LayoutAdmin />}>
+          <Route index element={<Dashboard />} />
+          <Route path="orders" element={<OrderReport />} />
+          <Route path="sales" element={<SalesReport />} />
+        </Route>
+      </Routes>
     </>
   );
 }

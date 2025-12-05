@@ -1,251 +1,425 @@
-import  { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState, useContext } from "react";
+import { AuthContext } from "../context/AuthContext";
+import { getCheckoutSummaryAPI } from "../services/checkout.Api";
+import { getaddress } from "../services/Address/getaddressApi";
+import { getpayments } from "../services/payments/getpaymentsApi";
+import axios from "axios";
 import "bootstrap/dist/css/bootstrap.min.css";
-import { useCart } from "../context/CartContext"; 
+import { FaMapMarkerAlt, FaCreditCard, FaShoppingBag } from "react-icons/fa";
 
 export default function Checkout() {
-  const navigate = useNavigate();
-  const { clearCart } = useCart();
-  const [paymentMethod, setPaymentMethod] = useState("cash");
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    country: "",
-    city: "",
+  const { token } = useContext(AuthContext);
+
+  const [summary, setSummary] = useState(null);
+  const [addresses, setAddresses] = useState([]);
+  const [payments, setPayments] = useState([]);
+
+  const [selectedAddress, setSelectedAddress] = useState(null);
+  const [selectedPayment, setSelectedPayment] = useState(null);
+
+  const [loading, setLoading] = useState(true);
+
+  // ============== New Address Form ==============
+  const [newAddress, setNewAddress] = useState({
+    address_name: "",
     address: "",
-    postalCode: "",
-    cardName: "",
-    cardNumber: "",
-    expDate: "",
+    city: "",
+    country: "",
+    postal_code: "",
+  });
+
+  // ============== New Payment Form ==============
+  const [newPayment, setNewPayment] = useState({
+    method: "MasterCard",
+    cardholder: "",
+    number: "",
+    exp: "",
     cvc: "",
   });
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
+  // =============================================================
+  // LOAD DATA
+  // =============================================================
+  useEffect(() => {
+    async function loadAll() {
+      try {
+        setLoading(true);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+        const checkoutRes = await getCheckoutSummaryAPI();
+        setSummary(checkoutRes.data.data);
 
-    // Validate required fields
-    const requiredFields = [
-      "name",
-      "email",
-      "phone",
-      "country",
-      "city",
-      "address",
-      "postalCode",
-    ];
+        const addrRes = await getaddress(token);
+        if (addrRes.data.success) {
+          setAddresses(addrRes.data.data.addresses);
+          if (addrRes.data.data.addresses.length > 0) {
+            setSelectedAddress(addrRes.data.data.addresses[0].address_id);
+          }
+        }
 
-    // Add card fields if payment is card
-    if (paymentMethod === "card") {
-      requiredFields.push("cardName", "cardNumber", "expDate", "cvc");
+        const payRes = await getpayments(token);
+        if (payRes.data.success) {
+          setPayments(payRes.data.data.payments);
+          if (payRes.data.data.payments.length > 0) {
+            setSelectedPayment(payRes.data.data.payments[0].payment_id);
+          }
+        }
+      } catch (err) {
+        console.error("Checkout load error:", err);
+      } finally {
+        setLoading(false);
+      }
     }
 
-    // Check if any are empty
-    const missing = requiredFields.filter(
-      (field) => formData[field].trim() === ""
-    );
+    loadAll();
+  }, [token]);
 
-    if (missing.length > 0) {
-      alert("Please fill in all required fields before placing order.");
-      return;
-    }
-
-    // If all good:
-    await clearCart();
-
-    alert("Order placed successfully!");
-    navigate("/orderStatus");
-  };
-
-  return (
-    <section className="py-5 bg-light min-vh-100">
-      <div className="container" style={{ marginTop: "80px", maxWidth: "700px" }}>
-        <button
-        style={{ color: "#81A4A6", fontWeight:"bold"}}
-          className="btn btn-link text-decoration-none  text-main mb-3"
-          onClick={() => navigate(-1)}
-        >
-          ← Back
-        </button>
-
-        <h4 className="fw-bold mb-4">Checkout</h4>
-
-        <form onSubmit={handleSubmit}>
-          {/* Personal Info */}
-          <div className="bg-white p-4 rounded-3 shadow-sm mb-4">
-            <h6 className="fw-bold mb-3">Personal Information</h6>
-            <div className="row g-3">
-              <div className="col-md-12">
-                <input
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  className="form-control"
-                  placeholder="Your Name"
-                  required
-                />
-              </div>
-              <div className="col-md-6">
-                <input
-                  name="email"
-                  type="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  className="form-control"
-                  placeholder="Email"
-                  required
-                />
-              </div>
-              <div className="col-md-6">
-                <input
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleChange}
-                  className="form-control"
-                  placeholder="Phone Number"
-                  required
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Shipping */}
-          <div className="bg-white p-4 rounded-3 shadow-sm mb-4">
-            <h6 className="fw-bold mb-3">Shipping Address</h6>
-            <div className="row g-3">
-              <div className="col-md-6">
-                <input
-                  name="country"
-                  value={formData.country}
-                  onChange={handleChange}
-                  className="form-control"
-                  placeholder="Country"
-                  required
-                />
-              </div>
-              <div className="col-md-6">
-                <input
-                  name="city"
-                  value={formData.city}
-                  onChange={handleChange}
-                  className="form-control"
-                  placeholder="City"
-                  required
-                />
-              </div>
-              <div className="col-md-8">
-                <input
-                  name="address"
-                  value={formData.address}
-                  onChange={handleChange}
-                  className="form-control"
-                  placeholder="Address"
-                  required
-                />
-              </div>
-              <div className="col-md-4">
-                <input
-                  name="postalCode"
-                  value={formData.postalCode}
-                  onChange={handleChange}
-                  className="form-control"
-                  placeholder="Postal Code"
-                  required
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Payment */}
-          <div className="bg-white p-4 rounded-3 shadow-sm mb-4">
-            <h6 className="fw-bold mb-3">Payment Methods</h6>
-            <div className="form-check mb-2">
-              <input
-                className="form-check-input"
-                type="radio"
-                name="payment"
-                checked={paymentMethod === "cash"}
-                onChange={() => setPaymentMethod("cash")}
-              />
-              <label className="form-check-label">Cash On Delivery</label>
-            </div>
-            <div className="form-check mb-3">
-              <input
-                className="form-check-input"
-                type="radio"
-                name="payment"
-                checked={paymentMethod === "card"}
-                onChange={() => setPaymentMethod("card")}
-              />
-              <label className="form-check-label">Credit or Debit</label>
-            </div>
-
-            {paymentMethod === "card" && (
-              <div className="row g-3">
-                <div className="col-md-12">
-                  <input
-                    name="cardName"
-                    value={formData.cardName}
-                    onChange={handleChange}
-                    className="form-control"
-                    placeholder="Cardholder Name"
-                    required
-                  />
-                </div>
-                <div className="col-md-12">
-                  <input
-                    name="cardNumber"
-                    value={formData.cardNumber}
-                    onChange={handleChange}
-                    className="form-control"
-                    placeholder="Card Number"
-                    required
-                  />
-                </div>
-                <div className="col-md-6">
-                  <input
-                    name="expDate"
-                    value={formData.expDate}
-                    onChange={handleChange}
-                    className="form-control"
-                    placeholder="EXP Date"
-                    required
-                  />
-                </div>
-                <div className="col-md-6">
-                  <input
-                    name="cvc"
-                    value={formData.cvc}
-                    onChange={handleChange}
-                    className="form-control"
-                    placeholder="CVC"
-                    required
-                  />
-                </div>
-              </div>
-            )}
-          </div>
-
-          <div className="text-center">
-            <button
-              type="submit"
-              className="btn text-white w-100 py-2"
-              style={{
-                backgroundColor: "#81A4A6",
-                borderRadius: "30px",
-                fontSize: "1.1rem",
-              }}
-            >
-              Place Order
-            </button>
-          </div>
-        </form>
+  if (loading || !summary) {
+    return (
+      <div className="text-center py-5" style={{ marginTop: "120px" }}>
+        Loading checkout...
       </div>
-    </section>
+    );
+  }
+
+  // totals
+  const itemsTotal = summary.items
+    .reduce((sum, item) => sum + parseFloat(item.subtotal), 0)
+    .toFixed(2);
+
+  const deliveryFee = parseFloat(summary.totals.delivery_fee).toFixed(2);
+
+  const finalTotal = (parseFloat(itemsTotal) + parseFloat(deliveryFee)).toFixed(
+    2
+  );
+
+  // =============================================================
+  // ** ADD NEW ADDRESS **
+  // =============================================================
+  const handleAddAddress = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await axios.post(
+        "http://localhost:4000/api/profile/addresses",
+        newAddress,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      if (res.data.success) {
+        const newAddr = res.data.data.address;
+
+        setAddresses([...addresses, newAddr]);
+        setSelectedAddress(newAddr.address_id);
+        setNewAddress({
+          address_name: "",
+          address: "",
+          city: "",
+          country: "",
+          postal_code: "",
+        });
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  // =============================================================
+  // ** ADD NEW PAYMENT **
+  // =============================================================
+  const handleAddPayment = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await axios.post(
+        "http://localhost:4000/api/profile/payments",
+        newPayment,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      if (res.data.success) {
+        const newPay = res.data.data.payment;
+
+        setPayments([...payments, newPay]);
+        setSelectedPayment(newPay.payment_id);
+
+        setNewPayment({
+          method: "MasterCard",
+          cardholder: "",
+          number: "",
+          exp: "",
+          cvc: "",
+        });
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  // =============================================================
+  // PLACE ORDER
+  // =============================================================
+  const handlePlaceOrder = async () => {
+    try {
+      const res = await axios.post(
+        "http://localhost:4000/api/checkout",
+        {
+          address_id: selectedAddress,
+          payment_id: selectedPayment,
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      alert("Order Placed Successfully: " + res.data.data.order_number);
+    } catch (err) {
+      console.error(err);
+      alert("Error placing order");
+    }
+  };
+
+  // =============================================================
+  // UI LAYOUT (2 Columns)
+  // =============================================================
+  return (
+    <div className="container" style={{ paddingTop: "120px" }}>
+      <h2 className="fw-bold text-center mb-4" style={{ color: "#328286" }}>
+        Checkout
+      </h2>
+
+      <div className="row">
+        {/* ========== RIGHT COLUMN ========== */}
+        <div className="col-lg-5 mb-4">
+          {/* ITEMS */}
+          <div className="card shadow-sm mb-4" style={{ borderRadius: "18px" }}>
+            <div
+              className="card-header"
+              style={{ background: "#81A4A6", color: "white" }}
+            >
+              <FaShoppingBag className="me-2" /> Your Items
+            </div>
+
+            <ul className="list-group list-group-flush">
+              {summary.items.map((item) => (
+                <li
+                  key={item.ItemID}
+                  className="list-group-item d-flex justify-content-between"
+                >
+                  <div>
+                    <strong>{item.ItemName}</strong>
+                    <br />
+                    <small className="text-muted">
+                      {item.Quantity} × ${item.Price}
+                    </small>
+                  </div>
+                  <strong className="text-success">${item.subtotal}</strong>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* SUMMARY */}
+          <div className="card shadow-sm" style={{ borderRadius: "18px" }}>
+            <div
+              className="card-header"
+              style={{ background: "#81A4A6", color: "white" }}
+            >
+              Order Summary
+            </div>
+            <ul className="list-group list-group-flush">
+              <li className="list-group-item d-flex justify-content-between">
+                <span>Items Total</span>
+                <strong>${itemsTotal}</strong>
+              </li>
+              <li className="list-group-item d-flex justify-content-between">
+                <span>Delivery Fee</span>
+                <strong>${deliveryFee}</strong>
+              </li>
+              <li className="list-group-item d-flex justify-content-between">
+                <span className="fw-bold">Final Total</span>
+                <strong className="text-success">${finalTotal}</strong>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        {/* ========== LEFT COLUMN ========== */}
+        <div className="col-lg-7">
+          {/* ===================== SELECT ADDRESS ===================== */}
+          <div className="card shadow-sm mb-4" style={{ borderRadius: "18px" }}>
+            <div
+              className="card-header"
+              style={{ background: "#81A4A6", color: "white" }}
+            >
+              <FaMapMarkerAlt className="me-2" /> Select Address
+            </div>
+
+            <ul className="list-group list-group-flush">
+              {addresses.map((addr) => (
+                <li
+                  key={addr.address_id}
+                  className="list-group-item d-flex align-items-center"
+                  style={{ cursor: "pointer" }}
+                  onClick={() => setSelectedAddress(addr.address_id)}
+                >
+                  <input
+                    type="radio"
+                    name="address"
+                    checked={selectedAddress === addr.address_id}
+                    readOnly
+                    className="me-3"
+                  />
+                  <div>
+                    <strong>{addr.address_name}</strong>
+                    <br />
+                    <small className="text-muted">
+                      {addr.address}, {addr.city}, {addr.country}
+                    </small>
+                  </div>
+                </li>
+              ))}
+            </ul>
+
+            {/* ---------- ADD NEW ADDRESS FORM ---------- */}
+            <form className="p-3" onSubmit={handleAddAddress}>
+              <h6 className="fw-bold mb-3">Add New Address</h6>
+
+              {[
+                "address_name",
+                "address",
+                "city",
+                "country",
+                "postal_code",
+              ].map((field, i) => (
+                <input
+                  key={i}
+                  className="form-control mb-2"
+                  placeholder={field.replace("_", " ").toUpperCase()}
+                  value={newAddress[field]}
+                  onChange={(e) =>
+                    setNewAddress({ ...newAddress, [field]: e.target.value })
+                  }
+                  required
+                />
+              ))}
+
+              <button className="btn btn-success w-100 mt-2">
+                Save Address
+              </button>
+            </form>
+          </div>
+
+          {/* ===================== SELECT PAYMENT ===================== */}
+          <div className="card shadow-sm mb-4" style={{ borderRadius: "18px" }}>
+            <div
+              className="card-header"
+              style={{ background: "#81A4A6", color: "white" }}
+            >
+              <FaCreditCard className="me-2" /> Select Payment Method
+            </div>
+
+            <ul className="list-group list-group-flush">
+              {payments.map((pay) => (
+                <li
+                  key={pay.payment_id}
+                  className="list-group-item d-flex align-items-center"
+                  style={{ cursor: "pointer" }}
+                  onClick={() => setSelectedPayment(pay.payment_id)}
+                >
+                  <input
+                    type="radio"
+                    name="payment"
+                    checked={selectedPayment === pay.payment_id}
+                    readOnly
+                    className="me-3"
+                  />
+                  <div>
+                    <strong>{pay.method}</strong> — ****{pay.last4}
+                  </div>
+                </li>
+              ))}
+            </ul>
+
+            {/* ---------- ADD NEW PAYMENT FORM ---------- */}
+            <form className="p-3" onSubmit={handleAddPayment}>
+              <h6 className="fw-bold mb-3">Add New Payment</h6>
+
+              <select
+                className="form-control mb-2"
+                value={newPayment.method}
+                onChange={(e) =>
+                  setNewPayment({ ...newPayment, method: e.target.value })
+                }
+              >
+                <option value="MasterCard">MasterCard</option>
+                <option value="PayPal">PayPal</option>
+              </select>
+
+              {newPayment.method !== "PayPal" && (
+                <>
+                  <input
+                    className="form-control mb-2"
+                    placeholder="Cardholder Name"
+                    value={newPayment.cardholder}
+                    onChange={(e) =>
+                      setNewPayment({
+                        ...newPayment,
+                        cardholder: e.target.value,
+                      })
+                    }
+                    required
+                  />
+
+                  <input
+                    className="form-control mb-2"
+                    placeholder="Card Number"
+                    value={newPayment.number}
+                    onChange={(e) =>
+                      setNewPayment({ ...newPayment, number: e.target.value })
+                    }
+                    required
+                  />
+
+                  <input
+                    className="form-control mb-2"
+                    placeholder="Expiry Date"
+                    type="date"
+                    value={newPayment.exp}
+                    onChange={(e) =>
+                      setNewPayment({ ...newPayment, exp: e.target.value })
+                    }
+                    required
+                  />
+
+                  <input
+                    className="form-control mb-2"
+                    placeholder="CVC"
+                    value={newPayment.cvc}
+                    onChange={(e) =>
+                      setNewPayment({ ...newPayment, cvc: e.target.value })
+                    }
+                    required
+                  />
+                </>
+              )}
+
+              <button className="btn btn-success w-100 mt-2">
+                Save Payment
+              </button>
+            </form>
+          </div>
+
+          {/* ===================== PLACE ORDER ===================== */}
+          <button
+            className="btn w-100 py-3 mb-5"
+            style={{
+              background: "#328286",
+              color: "white",
+              fontSize: "1.2rem",
+              borderRadius: "15px",
+            }}
+            onClick={handlePlaceOrder}
+          >
+            Place Order (${finalTotal})
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }
