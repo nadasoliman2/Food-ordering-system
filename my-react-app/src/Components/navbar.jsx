@@ -1,9 +1,11 @@
 import { NavLink, useLocation } from "react-router-dom";
 import { useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
-
+import { useNavigate } from "react-router-dom";
 export default function AppNavbar() {
   const location = useLocation();
+  const navigate = useNavigate();
+
   const { user, token, logout } = useContext(AuthContext);
 
   const isRestaurantActive =
@@ -14,7 +16,9 @@ export default function AppNavbar() {
  const handleLogout = () => {
   setTimeout(() => {
     logout();
-  }, 2500); 
+         navigate("/"); 
+
+  }, 2500);  
 };
 
   return (
@@ -151,7 +155,7 @@ export default function AppNavbar() {
           {/* لو مسجل دخول */}
           {token && user && (
             <>
-              <span className="me-3  " style={{fontWeight:"bold", color:"#81A4A6" , fontSize:"18px"}}>Hi, {user.username}</span>
+              <NavLink to="/profile" style={{textDecoration:"none"}}><span className="me-3  " style={{fontWeight:"bold", color:"#81A4A6" , fontSize:"18px"}}>Hi, {user.username}</span></NavLink>
               <button
                 onClick={handleLogout}
                 className="btn"

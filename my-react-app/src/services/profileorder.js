@@ -1,10 +1,20 @@
-// في ملف services/profileorder.js (أو حيثما توجد الدالة)
+// services/profileorder.js
+import axios from "axios";
+import { AuthContext } from "../context/AuthContext";
+import { useContext } from "react";
 
-import axios from "axios"; 
-const API = "http://localhost:4000/api"; 
+const API = "http://localhost:4000/api";
 
-export function getOrderProfile(userId) {
-  // **تمت إزالة المسافة هنا**
-  return axios.get(`${API}/profile/${userId}/orders`); 
-  // الصيغة الصحيحة: /api/profile/1/orders
+export function useOrderProfileService() {
+  const { token } = useContext(AuthContext);
+
+  const getOrderProfile = () => {
+    return axios.get(`${API}/profile/orders`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+  };
+
+  return { getOrderProfile };
 }

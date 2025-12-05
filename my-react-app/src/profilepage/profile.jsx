@@ -1,10 +1,15 @@
-import React, { useState, useEffect } from 'react';
+// Profile.jsx
+import React, { useState, useEffect, useContext } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import { getOrderProfile } from '../services/profileorder';
+
 import Address from './components/address';
 import Payment from './components/payment';
 import Accountsetting from './components/accountsetting';
+
 import { getaccount } from '../services/accountApi';
+import { useOrderProfileService } from '../services/profileorder';
+import { AuthContext } from '../context/AuthContext';
+
 // ==========================
 // Sidebar Component
 // ==========================
@@ -13,32 +18,33 @@ const Sidebar = ({ activeTab, setActiveTab }) => {
     { icon: '📦', label: 'My Orders', id: 'orders' },
     { icon: '📍', label: 'My Addresses', id: 'addresses' },
     { icon: '💳', label: 'My Payments', id: 'payments' },
-      { icon: '⚙️', label: 'Account Settings', id: 'accountSettings' }
-
+    { icon: '⚙️', label: 'Account Settings', id: 'accountSettings' }
   ];
-   const [account, setAccount] = useState(null);
- 
-   useEffect(() => {
-     const fetchAcc = async () => {
-       try {
-         const res = await getaccount(1); // user id
-         setAccount(res.data.data.account);
-       } catch (err) {
-         console.log("Error fetching account:", err);
-       }
-     };
-     fetchAcc();
-   }, []);
- 
-   if (!account) return <p>Loading...</p>;
- 
-   const { username} = account;
- 
+
+  const [account, setAccount] = useState(null);
+  const { token } = useContext(AuthContext);
+
+  useEffect(() => {
+    const fetchAcc = async () => {
+      try {
+        const res = await getaccount(token);
+        setAccount(res.data.data.account);
+      } catch (err) {
+        console.log("Error fetching account:", err);
+      }
+    };
+    fetchAcc();
+  }, [token]);
+
+  if (!account) return <p>Loading...</p>;
+
   return (
-    <div className="bg-white rounded shadow-sm p-4" style={{ position: 'sticky', top: '20px' }}>
+    <div className="bg-white rounded shadow-sm p-4 
+    " style={{ position: 'sticky', top: '20px' }}>
       <div className="text-center mb-4">
-      
-        <p className="fw-semibold " style={{color:" #69a297" ,fontSize:"20px"}}>{username}</p>
+        <p className="fw-semibold" style={{ color: "#69a297", fontSize: "20px" }}>
+          {account.username}
+        </p>
       </div>
 
       <div className="d-flex flex-column gap-2">
@@ -46,15 +52,8 @@ const Sidebar = ({ activeTab, setActiveTab }) => {
           <button
             key={item.id}
             onClick={() => setActiveTab(item.id)}
-            className={`btn btn-light w-100 text-start d-flex align-items-center gap-3 ${
-              activeTab === item.id ? 'bg-success bg-opacity-10 text-success' : ''
-            }`}
-            style={{
-              border: 'none',
-              padding: '12px 16px',
-              fontSize: '14px',
-              fontWeight: '500',
-            }}
+            className={`btn btn-light w-100 text-start d-flex align-items-center gap-3 ${activeTab === item.id ? 'bg-success bg-opacity-10 text-success' : ''}`}
+            style={{ border: 'none', padding: '12px 16px', fontSize: '14px', fontWeight: '500' }}
           >
             <span style={{ fontSize: '18px' }}>{item.icon}</span>
             <span>{item.label}</span>
@@ -62,13 +61,7 @@ const Sidebar = ({ activeTab, setActiveTab }) => {
         ))}
       </div>
 
-      <button
-        className="btn w-100 mt-4 d-flex align-items-center justify-content-center gap-2"
-        style={{ backgroundColor: '#69a297', color: 'white' }}
-      >
-        <span>🚪</span>
-        <span>Log Out</span>
-      </button>
+     
     </div>
   );
 };
@@ -80,31 +73,23 @@ const OrderCard = ({ order }) => {
   return (
     <div className="card mb-4 shadow-sm">
       <div className="card-body">
-        {/* Order Header */}
+        {/* Header */}
         <div className="d-flex justify-content-between align-items-center mb-3">
           <div>
             <h5 className="fw-bold mb-1">Order #{order.order_number}</h5>
             <p className="mb-0 text-muted" style={{ fontSize: '13px' }}>{order.date}</p>
           </div>
-          <span
-            className={`fw-semibold ${
-              order.status === 'Delivered' ? 'text-success' : 'text-danger'
-            }`}
-          >
+          <span className={`fw-semibold ${order.status === 'Delivered' ? 'text-success' : 'text-danger'}`}>
             {order.status}
           </span>
         </div>
 
-        {/* Items Grid */}
+        {/* Items */}
         <div className="row mb-3">
           {order.itemsList.map((item, idx) => (
             <div key={idx} className="col-6 mb-3">
               <div className="border rounded p-2 h-100 d-flex flex-column align-items-center text-center">
-                <img
-                  src={item.image_url}
-                  alt={item.item_name}
-                  style={{ width: '150px', height: '100px', objectFit: 'cover', borderRadius: '8px' }}
-                />
+                <img src={item.image_url} alt={item.item_name} style={{ width: '150px', height: '100px', objectFit: 'cover', borderRadius: '8px' }} />
                 <p className="fw-semibold mb-1 mt-2">{item.item_name}</p>
                 <p className="text-muted mb-1" style={{ fontSize: '13px' }}>Qty: {item.quantity}</p>
                 <p className="fw-bold mb-0">${item.price}</p>
@@ -113,7 +98,7 @@ const OrderCard = ({ order }) => {
           ))}
         </div>
 
-        {/* Delivery Fee & Total */}
+        {/* Totals */}
         <div className="d-flex justify-content-end gap-3 border-top pt-2">
           <div>
             <span className="text-muted" style={{ fontSize: '13px' }}>Delivery Fee:</span>{' '}
@@ -136,11 +121,13 @@ const OrdersList = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const { getOrderProfile } = useOrderProfileService();
+
   useEffect(() => {
-    const fetchOrders = async () => {
+    const fetch = async () => {
       try {
-        const res = await getOrderProfile(5);
-        const data = res.data.data.orders.map((order) => ({
+        const res = await getOrderProfile();
+        const arr = res.data.data.orders.map((order) => ({
           order_id: order.order_id,
           order_number: order.order_number,
           date: order.order_date_formatted,
@@ -149,25 +136,22 @@ const OrdersList = () => {
           delivery_fee: order.delivery_fee,
           grand_total: order.grand_total,
         }));
-        setOrders(data);
-        
-      } catch (err) {
-        console.error('Error fetching orders:', err);
+
+        setOrders(arr);
+      } catch (e) {
+        console.log("Error fetching orders:", e);
       }
       setLoading(false);
     };
-
-    fetchOrders();
-  }, []);
+    fetch();
+  }, [getOrderProfile]);
 
   if (loading) return <p>Loading...</p>;
 
   return (
     <div>
       <h2 className="fw-bold mb-4" style={{ fontSize: '28px', color: '#69a297' }}>My Orders</h2>
-      {orders.map((order) => (
-        <OrderCard key={order.order_id} order={order} />
-      ))}
+      {orders.map((order) => <OrderCard key={order.order_id} order={order} />)}
     </div>
   );
 };
@@ -180,18 +164,17 @@ export default function Profile() {
 
   return (
     <div className="py-5 bg-light min-vh-100">
-      <div className="container-lg py-3" style={{ marginTop: '100px' }}>
-        <div className="row g-4">
-          <div className="col-lg-3">
+      <div className="container-lg py-3" style={{ marginTop: '100px', minHeight: '100vh' }}>
+        <div className="row g-4 d-flex">
+          <div className="col-lg-3 d-flex">
             <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
           </div>
+
           <div className="col-lg-9">
             {activeTab === 'orders' && <OrdersList />}
             {activeTab === 'addresses' && <Address />}
             {activeTab === 'payments' && <Payment />}
-{activeTab === 'accountSettings' && <Accountsetting />}
-
-
+            {activeTab === 'accountSettings' && <Accountsetting />}
           </div>
         </div>
       </div>
