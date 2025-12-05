@@ -13,8 +13,9 @@ export default function FoodCard({
   const navigate = useNavigate();
 
   const handleShowItem = () => {
-    navigate(`/product/${id}`);
-  
+    const encodedRestaurant = encodeURIComponent(restaurantName);
+    const encodedItem = encodeURIComponent(name);
+    navigate(`/product/${encodedRestaurant}/${encodedItem}`);
   };
 
   return (
@@ -24,21 +25,39 @@ export default function FoodCard({
         width: "16rem",
         backgroundColor: "#EDF3F3",
         minWidth: "16rem",
+        overflow: "hidden",
       }}
     >
-      {/* Product image */}
-      <div className="d-flex justify-content-start" style={{ marginTop: "-4rem" }}>
-        <img
-          src={image}
-          alt={name}
-          className="img-fluid"
+      {/* Circular image - top-left */}
+      <div
+        className="position-absolute"
+        style={{
+          top: "0rem",
+          left: "1rem",
+          marginTop:"3px",
+          marginBottom:"10px"
+        }}
+      >
+        <div
+          className="rounded-circle bg-white shadow-sm d-flex justify-content-center align-items-center"
           style={{
-            width: "10rem",
-            height: "10rem",
-            objectFit: "contain",
-            filter: "drop-shadow(0 4px 6px rgba(0,0,0,0.1))",
+            width: "6.5rem",
+            height: "6.5rem",
+            overflow: "hidden",
+            border: "4px solid #fff",
+            boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
           }}
-        />
+        >
+          <img
+            src={image}
+            alt={name}
+            style={{
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+            }}
+          />
+        </div>
       </div>
 
       {/* Rating badge */}
@@ -48,8 +67,7 @@ export default function FoodCard({
       </div>
 
       {/* Item info */}
-      <div className="text-start mt-3 mb-5">
-        {/* ✅ added mb-5 to create space for bottom section */}
+      <div className="text-start mt-5 pt-5 mb-5">
         <h5 className="fw-semibold text-dark mb-1">{name}</h5>
         <p className="text-muted small mb-3">
           Available in:{" "}
@@ -57,11 +75,8 @@ export default function FoodCard({
         </p>
       </div>
 
-      {/* Bottom section pinned visually at bottom */}
-      <div
-        className="d-flex justify-content-between align-items-center position-absolute bottom-0 start-0 w-100 px-3 pb-3"
-        style={{}}
-      >
+      {/* Bottom section */}
+      <div className="d-flex justify-content-between align-items-center position-absolute bottom-0 start-0 w-100 px-3 pb-3">
         <button
           className="btn text-white"
           style={{

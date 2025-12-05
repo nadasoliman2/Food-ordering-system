@@ -1,26 +1,18 @@
-import React from "react";
-import foodItems from "../data/foodItems";
+import React, { useEffect, useState } from "react";
 import FoodCard from "../Components/FoodCard";
+import { getPopularDishes } from "../services/popularDishesApi"; // ✅ Import from service
 
 export default function PopularDishesSection() {
-  // 🧩 Flatten restaurants → categories → items
-  const allRestaurants = foodItems.flatMap((restaurant) => {
-    // Combine all items from the restaurant, keeping restaurant info attached
-    const allMenuItems = Object.values(restaurant.categories)
-      .flat()
-      .map((item) => ({
-        ...item,
-        restaurantId: restaurant.restaurantId,
-        restaurantName: restaurant.restaurantName,
-      }));
+  const [popularDishes, setPopularDishes] = useState([]);
 
-    // ✨ Select first few items (e.g. first 2)
-    return allMenuItems.slice(0, 2);
-  });
+  useEffect(() => {
+    const fetchDishes = async () => {
+      const data = await getPopularDishes();
+      setPopularDishes(data);
+    };
 
-  // These selected items are your "popular" ones
-  const popularDishes = allRestaurants;
-  console.log( popularDishes )
+    fetchDishes();
+  }, []);
 
   return (
     <section className="popular-dishes py-1">
@@ -32,11 +24,10 @@ export default function PopularDishesSection() {
           </p>
         </div>
 
-        {/* Scrollable row */}
         <div className="d-flex flex-nowrap overflow-auto py-5 gap-4">
-          {popularDishes.map((dish, index) => (
+          {popularDishes.map((dish) => (
             <FoodCard
-              key={`${dish.restaurantId}-${dish.id}`}
+              key={dish.id}
               id={dish.id}
               restaurantId={dish.restaurantId}
               restaurantName={dish.restaurantName}
