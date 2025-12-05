@@ -1,12 +1,30 @@
-// NavbarAdmin.jsx
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
 
 export default function NavbarAdmin() {
+  const [adminName, setAdminName] = useState("");
+  const navigate = useNavigate();
+
+  // ✅ Load admin info from localStorage
+  useEffect(() => {
+    const adminData = localStorage.getItem("adminUser");
+    if (adminData) {
+      const parsed = JSON.parse(adminData);
+      setAdminName(parsed.username || parsed.email || "Admin");
+    }
+  }, []);
+
+  // ✅ Logout handler
+  const handleLogout = () => {
+    localStorage.removeItem("adminUser");
+    localStorage.removeItem("adminToken");
+    navigate("/admin/login");
+  };
+
   return (
-    
     <nav
-      className="navbar navbar-expand-lg  custom-navbar-container-admin position-absolute"
-      style={{ left: 0, right: 0 , background:""}}
+      className="navbar navbar-expand-lg custom-navbar-container-admin position-absolute"
+      style={{ left: 0, right: 0 }}
     >
       <div className="container">
         {/* Logo */}
@@ -35,8 +53,8 @@ export default function NavbarAdmin() {
             {/* Dashboard */}
             <li className="nav-item">
               <NavLink
-                to=""       // Relative link → /admin
-                end         // End علشان Active يظهر بس على exact path
+                to=""
+                end
                 className={({ isActive }) =>
                   "nav-link" + (isActive ? " active" : "")
                 }
@@ -48,7 +66,7 @@ export default function NavbarAdmin() {
             {/* Sales Report */}
             <li className="nav-item">
               <NavLink
-                to="sales"   // Relative link → /admin/sales
+                to="sales"
                 className={({ isActive }) =>
                   "nav-link" + (isActive ? " active text-primary fw-bold" : "")
                 }
@@ -60,7 +78,7 @@ export default function NavbarAdmin() {
             {/* Orders Report */}
             <li className="nav-item">
               <NavLink
-                to="orders"  // Relative link → /admin/orders
+                to="orders"
                 className={({ isActive }) =>
                   "nav-link" + (isActive ? " active" : "")
                 }
@@ -71,28 +89,27 @@ export default function NavbarAdmin() {
           </ul>
         </div>
 
-        {/* User Info + Logout */}
+        {/* ✅ Admin Info + Logout */}
         <div className="d-flex align-items-center gap-3">
-          <div className="text-center">
-            <img
-              src="https://via.placeholder.com/50"
-              alt="User"
-              className="rounded-circle border border-3"
-              style={{ width: "45px", height: "45px", borderColor: "#81A4A6" }}
-            />
-            <p className="m-0" style={{ fontSize: "0.9rem", fontWeight: "bold" }}>
-              288
-            </p>
-          </div>
+          <p
+            className="m-0 fw-bold text-dark"
+            style={{ fontSize: "1rem", color: "#81A4A6" }}
+          >
+            Hi,&nbsp;{adminName || "Admin"}
+          </p>
 
+          {/* ➜ acts as logout button */}
           <button
+            onClick={handleLogout}
             className="btn"
             style={{
               background: "transparent",
               color: "#81A4A6",
               fontSize: "1.8rem",
               border: "none",
+              cursor: "pointer",
             }}
+            title="Logout"
           >
             ➜
           </button>

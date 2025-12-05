@@ -1,21 +1,49 @@
 import { useForm } from "react-hook-form";
+import { useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
 import image from "../../../assets/login.png";
-import "@fortawesome/fontawesome-free/css/all.min.css";
 import admin from "../../../assets/solar_user-bold.png";
-import { Link } from "react-router-dom";
+import "@fortawesome/fontawesome-free/css/all.min.css";
+import { adminLogin } from "../../../services/adminApi";
 
 export default function AdminLogin() {
+  const navigate = useNavigate();
   const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm();
 
-  const onSubmit = (data) => {
-    console.log(data);
-    // إرسال البيانات إلى الخادم
+  const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
+
+  const onSubmit = async (data) => {
+    try {
+      setLoading(true);
+      setErrorMsg("");
+
+      // ✅ Send email as the `identifier`
+      const res = await adminLogin(data.email, data.password);
+      console.log("Admin login response:", res);
+
+      const adminData = res.data;
+
+      if (res.success && adminData.role === "Admin") {
+        localStorage.setItem("adminToken", adminData.token);
+        localStorage.setItem("adminUser", JSON.stringify(adminData));
+        navigate("/admin");
+      } else {
+        setErrorMsg("Access denied. You’re not authorized as an admin.");
+      }
+    } catch (err) {
+      console.error("Admin login failed:", err);
+      setErrorMsg(err.message || "Invalid email or password.");
+    } finally {
+      setLoading(false);
+    }
   };
 
+  // 🎨 Styles
   const containerStyle = {
     minHeight: "100vh",
     backgroundColor: "#81A4A6",
@@ -45,7 +73,6 @@ export default function AdminLogin() {
 
   const rightPanelStyle = {
     flex: 1,
-    bordertRadius: "10px",
     position: "relative",
     display: "flex",
     alignItems: "center",
@@ -83,9 +110,10 @@ export default function AdminLogin() {
           >
             YumYard
           </h2>
+
           <div className="d-flex align-items-center justify-content-between mb-4">
             <h4 className="mb-2" style={{ fontWeight: "500" }}>
-              Sign in
+              Admin Sign In
             </h4>
             <Link
               to="/auth/login"
@@ -101,22 +129,41 @@ export default function AdminLogin() {
             </Link>
           </div>
 
+          {/* ⚠️ Error Message */}
+          {errorMsg && (
+            <p className="text-danger text-center fw-semibold">{errorMsg}</p>
+          )}
+
+          {/* ✅ Form */}
           <form onSubmit={handleSubmit(onSubmit)}>
-            {/* حقل ID بدل البريد الإلكتروني */}
-            <label htmlFor="id" className="form-label">
-              ID
+            {/* 🎯 Email Field */}
+            <label htmlFor="email" className="form-label">
+              Email
             </label>
             <div className="d-flex align-items-center" style={inputGroupStyle}>
-              <i className="fas fa-id-badge" style={iconStyle}></i>
+              <i className="fas fa-envelope" style={iconStyle}></i>
               <input
-                type="text"
-                id="id"
-                placeholder="Enter Your ID"
+                type="email"
+                id="email"
+                placeholder="Enter your admin email"
                 style={inputStyle}
+                {...register("email", {
+                  required: "Email is required",
+                  pattern: {
+                    value:
+                      /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
+                    message: "Invalid email format",
+                  },
+                })}
               />
             </div>
+            {errors.email && (
+              <p className="text-danger mb-2" style={{ fontSize: "0.8rem" }}>
+                {errors.email.message}
+              </p>
+            )}
 
-            {/* حقل كلمة المرور */}
+            {/* 🔒 Password Field */}
             <label htmlFor="password" className="form-label">
               Password
             </label>
@@ -125,7 +172,7 @@ export default function AdminLogin() {
               <input
                 type="password"
                 id="password"
-                placeholder="Enter Your Password"
+                placeholder="Enter your admin password"
                 style={inputStyle}
                 {...register("password", { required: "Password is required" })}
               />
@@ -137,6 +184,7 @@ export default function AdminLogin() {
               </p>
             )}
 
+            {/* 🚀 Submit Button */}
             <button
               type="submit"
               className="btn w-100 mt-4"
@@ -148,18 +196,18 @@ export default function AdminLogin() {
                 fontSize: "1.1rem",
                 fontWeight: "600",
               }}
+              disabled={loading}
             >
-              Sign In
+              {loading ? "Signing In..." : "Sign In"}
             </button>
-
-           
           </form>
         </div>
 
+        {/* 🖼️ Right Panel */}
         <div style={rightPanelStyle}>
           <img
             src={image}
-            alt="Delicious food in a bowl"
+            alt="Delicious food"
             className="w-100 h-100"
             style={{ objectFit: "cover", opacity: 0.8 }}
           />
