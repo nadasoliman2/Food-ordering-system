@@ -8,6 +8,7 @@ export default function NavbarAdmin() {
   // ✅ Load admin info from localStorage
   useEffect(() => {
     const adminData = localStorage.getItem("adminUser");
+    
     if (adminData) {
       const parsed = JSON.parse(adminData);
       setAdminName(parsed.username || parsed.email || "Admin");
@@ -89,13 +90,12 @@ export default function NavbarAdmin() {
           </ul>
         </div>
 
-        {/* ✅ Admin Info + Logout */}
         <div className="d-flex align-items-center gap-3">
           <p
             className="m-0 fw-bold text-dark"
             style={{ fontSize: "1rem", color: "#81A4A6" }}
           >
-            Hi,&nbsp;{adminName || "Admin"}
+            Hi {adminName || "Admin"}
           </p>
 
           {/* ➜ acts as logout button */}

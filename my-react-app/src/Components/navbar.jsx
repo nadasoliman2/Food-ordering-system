@@ -18,7 +18,7 @@ export default function AppNavbar() {
     logout();
          navigate("/"); 
 
-  }, 2500);  
+  }, 3500);  
 };
 
   return (
@@ -160,12 +160,12 @@ export default function AppNavbar() {
                 onClick={handleLogout}
                 className="btn"
                 style={{
-                  background: "#f44336",
+                  background: " #69a297",
                   color: "white",
                   borderRadius: "20px",
                 }}
               >
-                Logout
+                ➜
               </button>
             </>
           )}
