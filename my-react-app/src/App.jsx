@@ -19,10 +19,13 @@ import OrderReport from "./AdminPanel/componentadmin/OrderReport.jsx";
 import SalesReport from "./AdminPanel/componentadmin/SalesReport.jsx";
 import Checkout from "./cart/checkout.jsx";
 import OrderStatus from "./cart/orderStatus.jsx";
+import { AuthProvider } from "./context/AuthContext";
+
 
 function App() {
   return (
     <>
+     <AuthProvider>
       <CartProvider>
         <Routes>
           {/* Layout ثابت طول الموقع */}
@@ -62,6 +65,7 @@ function App() {
 
         </Routes>
       </CartProvider>
+      </AuthProvider>
     </>
   );
 }

@@ -1,25 +1,63 @@
 import { useForm } from "react-hook-form";
-import image from "../../assets/register.png"; // تأكد من تحديث المسار الصحيح لصورة الـ background
-import "@fortawesome/fontawesome-free/css/all.min.css"; // استيراد Font Awesome
+import { zodResolver } from "@hookform/resolvers/zod";
+import { registerSchema } from "../../schemas/auth/registerSchema";
+import { registerUser } from "../../services/auth/register";
+import image from "../../assets/register.png";
+import "@fortawesome/fontawesome-free/css/all.min.css";
+import { NavLink, useNavigate } from "react-router-dom";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 export default function Register() {
-  // تهيئة useForm
+  const navigate = useNavigate();
+
   const {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm();
+  } = useForm({
+    resolver: zodResolver(registerSchema),
+  });
 
-  // دالة تُنفذ عند إرسال النموذج بنجاح
-  const onSubmit = (data) => {
-    console.log(data);
-    // يمكنك هنا إضافة منطق إرسال البيانات إلى الخادم
+  const onSubmit = async (data) => {
+    try {
+      const result = await registerUser(data);
+
+      if (result.success) {
+        // ✅ عرض toast بالنجاح
+        toast.success(`User registered successfully`, {
+          position: "top-right",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          theme: "colored",
+        });
+
+        // ⏱ إعادة التوجيه بعد 3 ثواني
+        setTimeout(() => {
+          navigate("/auth/login");
+        }, 3000);
+      } else {
+        toast.error(result.message || "Registration failed", {
+          position: "top-right",
+          autoClose: 3000,
+          theme: "colored",
+        });
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Registration failed", {
+        position: "top-right",
+        autoClose: 3000,
+        theme: "colored",
+      });
+    }
   };
 
-  // تنسيقات الـ background والألوان استنادًا إلى الصورة
   const containerStyle = {
     minHeight: "100vh",
-    backgroundColor: "#81A4A6", // لون الخلفية الفاتح
+    backgroundColor: "#81A4A6",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
@@ -28,11 +66,11 @@ export default function Register() {
 
   const cardStyle = {
     display: "flex",
-    width: "80%", // عرض البطاقة الكلي
+    width: "80%",
     maxWidth: "1000px",
-    borderRadius: "20px", // حواف مستديرة كبيرة
-    overflow: "hidden", // هام لضمان عدم خروج المحتوى
-    boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)", // ظل خفيف
+    borderRadius: "20px",
+    overflow: "hidden",
+    boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
   };
 
   const leftPanelStyle = {
@@ -47,8 +85,8 @@ export default function Register() {
 
   const rightPanelStyle = {
     flex: 1,
-    backgroundColor: "#81A4A6", // لون الخلفية في الجزء الأيمن (قد يختلف قليلاً عن الصورة)
-    bordertRadius: "20px",
+    backgroundColor: "#81A4A6",
+    borderRadius: "20px",
     position: "relative",
     display: "flex",
     alignItems: "center",
@@ -57,7 +95,7 @@ export default function Register() {
   };
 
   const inputGroupStyle = {
-    backgroundColor: "#F2F4F7", // لون خلفية حقل الإدخال
+    backgroundColor: "#F2F4F7",
     borderRadius: "10px",
     border: "none",
     padding: "8px 15px",
@@ -72,41 +110,30 @@ export default function Register() {
   };
 
   const iconStyle = {
-    color: "#A0A0A0", // لون الأيقونة
+    color: "#A0A0A0",
     marginRight: "10px",
-  };
-
-  const passwordReqStyle = {
-    fontSize: "0.85rem",
-    color: "#777",
-    marginTop: "5px",
   };
 
   return (
     <div style={containerStyle}>
       <div style={cardStyle}>
-        {/* الجزء الأيسر: نموذج التسجيل */}
+        {/* Left Panel: Form */}
         <div style={leftPanelStyle}>
-          
-      <h2
-  className="text-center "
-  style={{
-    color: "#81A4A6",
-    fontFamily: "Lobster, sans-serif"
-  }}
->
-  YumYard
-</h2>
-<h4 className=" mb-2" style={{ fontWeight: "500" }}>
+          <NavLink to="/" style={{ textDecoration: "none" }}>
+            <h2
+              className="text-center"
+              style={{ color: "#81A4A6", fontFamily: "Lobster, sans-serif" }}
+            >
+              YumYard
+            </h2>
+          </NavLink>
+          <h4 className="mb-3" style={{ fontWeight: "700" }}>
             Sign Up
           </h4>
 
-
           <form onSubmit={handleSubmit(onSubmit)}>
-            {/* حقل اسم المستخدم */}
-            <label htmlFor="username" className="form-label">
-              Username
-            </label>
+            {/* Username */}
+            <label htmlFor="username">Username</label>
             <div className="d-flex align-items-center" style={inputGroupStyle}>
               <i className="fas fa-user" style={iconStyle}></i>
               <input
@@ -114,19 +141,17 @@ export default function Register() {
                 id="username"
                 placeholder="Enter Your Username"
                 style={inputStyle}
-                {...register("username", { required: "Username is required" })}
+                {...register("username")}
               />
             </div>
             {errors.username && (
-              <p className="text-danger mb-2" style={{ fontSize: "0.8rem" }}>
+              <p className="text-danger" style={{ fontSize: "0.8rem" }}>
                 {errors.username.message}
               </p>
             )}
 
-            {/* حقل البريد الإلكتروني */}
-            <label htmlFor="email" className="form-label">
-              Email
-            </label>
+            {/* Email */}
+            <label htmlFor="email">Email</label>
             <div className="d-flex align-items-center" style={inputGroupStyle}>
               <i className="fas fa-envelope" style={iconStyle}></i>
               <input
@@ -134,19 +159,17 @@ export default function Register() {
                 id="email"
                 placeholder="Enter Your Email"
                 style={inputStyle}
-                {...register("email", { required: "Email is required" })}
+                {...register("email")}
               />
             </div>
             {errors.email && (
-              <p className="text-danger mb-2" style={{ fontSize: "0.8rem" }}>
+              <p className="text-danger" style={{ fontSize: "0.8rem" }}>
                 {errors.email.message}
               </p>
             )}
 
-            {/* حقل كلمة المرور */}
-            <label htmlFor="password" className="form-label">
-              Password
-            </label>
+            {/* Password */}
+            <label htmlFor="password">Password</label>
             <div className="d-flex align-items-center" style={inputGroupStyle}>
               <i className="fas fa-lock" style={iconStyle}></i>
               <input
@@ -154,69 +177,47 @@ export default function Register() {
                 id="password"
                 placeholder="Enter Your Password"
                 style={inputStyle}
-                {...register("password", { required: "Password is required" })}
+                {...register("password")}
               />
-              <i className="fas fa-eye-slash" style={iconStyle}></i> {/* أيقونة إظهار/إخفاء */}
             </div>
             {errors.password && (
-              <p className="text-danger mb-2" style={{ fontSize: "0.8rem" }}>
+              <p className="text-danger" style={{ fontSize: "0.8rem" }}>
                 {errors.password.message}
               </p>
             )}
 
-            {/* حقل تأكيد كلمة المرور */}
-            <label htmlFor="confirmPassword" className="form-label">
-              confirm password
-            </label>
+            {/* Phone */}
+            <label htmlFor="phone">Phone</label>
             <div className="d-flex align-items-center" style={inputGroupStyle}>
-              <i className="fas fa-lock" style={iconStyle}></i>
+              <i className="fas fa-phone" style={iconStyle}></i>
               <input
-                type="password"
-                id="confirmPassword"
-                placeholder="Confirm Your Password"
+                type="text"
+                id="phone"
+                placeholder="Enter Your Phone"
                 style={inputStyle}
-                {...register("confirmPassword", {
-                  required: "Confirming password is required",
-                })}
+                {...register("phone")}
               />
-              <i className="fas fa-eye-slash" style={iconStyle}></i>
             </div>
-            {errors.confirmPassword && (
-              <p className="text-danger mb-3" style={{ fontSize: "0.8rem" }}>
-                {errors.confirmPassword.message}
+            {errors.phone && (
+              <p className="text-danger" style={{ fontSize: "0.8rem" }}>
+                {errors.phone.message}
               </p>
             )}
 
-            {/* متطلبات كلمة المرور */}
-            <div style={passwordReqStyle}>
-              <i className="fas fa-circle" style={{ fontSize: "0.5rem", marginRight: "5px" }}></i>
-              Use 8 or more characters
-              <i className="fas fa-circle" style={{ fontSize: "0.5rem", marginLeft: "15px", marginRight: "5px" }}></i>
-              One Uppercase character
-              <i className="fas fa-circle" style={{ fontSize: "0.5rem", marginLeft: "15px", marginRight: "5px" }}></i>
-              One special character
-            </div>
-
-            {/* خانة الاشتراك في رسائل البريد الإلكتروني */}
-            <div className="form-check my-2">
+            {/* Marketing Opt */}
+            <div className="form-check mb-3">
               <input
-                className="form-check-input"
                 type="checkbox"
-                id="receiveEmails"
-                {...register("receiveEmails")}
+                id="marketing_opt"
+                className="form-check-input"
+                {...register("marketing_opt")}
               />
-              <label className="form-check-label" htmlFor="receiveEmails" style={{ fontSize: "0.9rem" }}>
-                I want to receive emails about the product, feature updates, events, and
-                marketing promotions.
+              <label htmlFor="marketing_opt" className="form-check-label">
+                I agree to receive marketing emails
               </label>
             </div>
 
-            {/* رابط شروط الاستخدام وسياسة الخصوصية */}
-            <p className="mb-2" style={{ fontSize: "0.85rem", color: "#777" }}>
-              By creating an account, you agree to the <a href="#" style={{ color: "#328286" }}>Terms of Use</a> and <a href="#" style={{ color: "#328286" }}>Privacy Policy</a>.
-            </p>
-
-            {/* زر التسجيل */}
+            {/* Submit Button */}
             <button
               type="submit"
               className="btn w-100"
@@ -232,24 +233,32 @@ export default function Register() {
               Sign Up
             </button>
 
-            {/* رابط تسجيل الدخول */}
+            {/* Login Link */}
             <p className="text-center mt-3" style={{ fontSize: "0.9rem" }}>
-              Already have an account? <a href="/auth/login" style={{ color: "#328286", fontWeight: "600" }}>Log in</a>
+              Already have an account?{" "}
+              <a
+                href="/auth/login"
+                style={{ color: "#328286", fontWeight: "600" }}
+              >
+                Log in
+              </a>
             </p>
           </form>
         </div>
 
-        {/* الجزء الأيمن: الصورة */}
+        {/* Right Panel: Image */}
         <div style={rightPanelStyle}>
-          {/* قد تحتاج إلى تعديل طريقة عرض الصورة لتطابق تصميم الـ background */}
           <img
             src={image}
             alt="Delicious food in a bowl"
-            className=" w-100 h-100"
-            style={{ objectFit: "cover", opacity: 0.8 }} // تنسيق للصورة لتملأ المساحة
+            className="w-100 h-100"
+            style={{ objectFit: "cover", opacity: 0.8 }}
           />
         </div>
       </div>
+
+      {/* Toast Container */}
+      <ToastContainer rtl={true} />
     </div>
   );
 }
