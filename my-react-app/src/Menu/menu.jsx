@@ -30,6 +30,7 @@ export function Menu() {
         const res = await getRestaurantMenu(decodedRestaurantName);
         const categories = res.data.data.categories || [];
 
+        // Flatten items for easier use
         const allItems = categories.flatMap((cat) =>
           cat.items.map((item) => ({
             ...item,
@@ -39,14 +40,22 @@ export function Menu() {
         );
 
         setRestaurantMenu(allItems);
-        setAvailableCategories(["All", ...categories.map((cat) => cat.category_name)]);
+
+        // ✅ Store categories with their image URLs from API
+        setAvailableCategories([
+          { category_name: "All", image_url: null },
+          ...categories.map((cat) => ({
+            category_name: cat.category_name,
+            image_url: cat.image_url,
+          })),
+        ]);
 
         setRestaurantDetails({
           name: decodedRestaurantName,
           imageUrl: passedImage,
         });
       } catch (error) {
-        console.error(error);
+        console.error("Error fetching menu:", error);
       } finally {
         setLoading(false);
       }
@@ -55,31 +64,31 @@ export function Menu() {
     fetchMenuData();
   }, [decodedRestaurantName, passedImage]);
 
-  // ✅ Cleanup — save image if needed (maintain persistency)
+  // ✅ Save restaurant image for persistence
   useEffect(() => {
     if (passedImage) {
       localStorage.setItem("selectedRestaurantImage", passedImage);
     }
   }, [passedImage]);
 
-  // ✅ Handle search
+  // ✅ Handle search (with debounce)
   useEffect(() => {
     const delay = setTimeout(async () => {
-      if (!searchTerm.trim()) {
-        const res = await getRestaurantMenu(decodedRestaurantName);
-        const categories = res.data.data.categories || [];
-        const allItems = categories.flatMap((cat) =>
-          cat.items.map((item) => ({
-            ...item,
-            category_name: cat.category_name,
-            RestaurantName: decodedRestaurantName,
-          }))
-        );
-        setRestaurantMenu(allItems);
-        return;
-      }
-
       try {
+        if (!searchTerm.trim()) {
+          const res = await getRestaurantMenu(decodedRestaurantName);
+          const categories = res.data.data.categories || [];
+          const allItems = categories.flatMap((cat) =>
+            cat.items.map((item) => ({
+              ...item,
+              category_name: cat.category_name,
+              RestaurantName: decodedRestaurantName,
+            }))
+          );
+          setRestaurantMenu(allItems);
+          return;
+        }
+
         const res = await searchRestaurantItems(decodedRestaurantName, searchTerm);
         const results = res.data.data.results || [];
         const normalized = results.map((item) => ({
@@ -88,7 +97,7 @@ export function Menu() {
         }));
         setRestaurantMenu(normalized);
       } catch (e) {
-        console.error(e);
+        console.error("Error searching menu items:", e);
       }
     }, 500);
     return () => clearTimeout(delay);
@@ -124,7 +133,7 @@ export function Menu() {
           </div>
         )}
 
-        {/* Search bar */}
+        {/* 🔎 Search bar */}
         <div className="row justify-content-center mb-5">
           <div className="col-lg-6">
             <div className="position-relative">
@@ -149,30 +158,27 @@ export function Menu() {
           </div>
         </div>
 
-        {/* Categories */}
+        {/* 🍕 Categories */}
         <div className="overflow-auto mb-5" style={{ whiteSpace: "nowrap" }}>
           <div className="d-inline-flex gap-4 pb-3">
-            {availableCategories.map((category, index) => {
-              const catData =
-                category === "All"
-                  ? { category_name: "All" }
-                  : restaurantMenu.find((item) => item.category_name === category);
-
-              const categoryImage = catData?.image_url
-                ? `/${catData.image_url}`
+            {availableCategories.map((cat, index) => {
+              const categoryImage = cat.image_url
+                ? `/${cat.image_url}`
                 : "/category-placeholder.jpg";
 
               return (
                 <div
                   key={index}
                   className="text-center"
-                  onClick={() => setSelectedCategory(category)}
+                  onClick={() => setSelectedCategory(cat.category_name)}
                   style={{
                     cursor: "pointer",
                     minWidth: "80px",
-                    opacity: selectedCategory === category ? 1 : 0.7,
+                    opacity: selectedCategory === cat.category_name ? 1 : 0.7,
                     transform:
-                      selectedCategory === category ? "scale(1.1)" : "scale(1)",
+                      selectedCategory === cat.category_name
+                        ? "scale(1.1)"
+                        : "scale(1)",
                     transition: "all 0.3s",
                   }}
                 >
@@ -182,22 +188,25 @@ export function Menu() {
                       width: "60px",
                       height: "60px",
                       border:
-                        selectedCategory === category
+                        selectedCategory === cat.category_name
                           ? "3px solid #81A4A6"
                           : "none",
                       backgroundColor:
-                        selectedCategory === category ? "#fff" : "#f8f9fa",
+                        selectedCategory === cat.category_name ? "#fff" : "#f8f9fa",
                     }}
                   >
-                    {category !== "All" ? (
+                    {cat.category_name !== "All" ? (
                       <img
                         src={categoryImage}
-                        alt={category}
+                        alt={cat.category_name}
                         style={{
                           width: "100%",
                           height: "100%",
                           objectFit: "cover",
                         }}
+                        onError={(e) =>
+                          (e.currentTarget.src = "/category-placeholder.jpg")
+                        }
                       />
                     ) : (
                       <span style={{ fontSize: "30px" }}>🍽️</span>
@@ -205,10 +214,10 @@ export function Menu() {
                   </div>
                   <small
                     className={`${
-                      selectedCategory === category ? "fw-bold" : ""
+                      selectedCategory === cat.category_name ? "fw-bold" : ""
                     }`}
                   >
-                    {category}
+                    {cat.category_name}
                   </small>
                 </div>
               );
@@ -216,7 +225,7 @@ export function Menu() {
           </div>
         </div>
 
-        {/* Menu items */}
+        {/* 🍔 Menu items */}
         {loading ? (
           <div className="text-center py-5 text-muted">Loading...</div>
         ) : displayedItems.length > 0 ? (
