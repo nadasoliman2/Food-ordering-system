@@ -44,6 +44,7 @@ function App() {
               )
             }
           />
+          <Route path="/orderStatus" element={<OrderStatus />} />
 
           <Route path="/orderStatus" element={<OrderStatus />} />
 

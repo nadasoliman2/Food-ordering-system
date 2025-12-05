@@ -1,7 +1,7 @@
-// services/profileorder.js
+// src/services/profileorder.js
 import axios from "axios";
-import { AuthContext } from "../context/AuthContext";
 import { useContext } from "react";
+import { AuthContext } from "../context/AuthContext";
 
 const API = "http://localhost:4000/api";
 
@@ -10,9 +10,7 @@ export function useOrderProfileService() {
 
   const getOrderProfile = () => {
     return axios.get(`${API}/profile/orders`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+      headers: { Authorization: `Bearer ${token}` },
     });
   };
 

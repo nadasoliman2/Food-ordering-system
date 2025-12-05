@@ -1,166 +1,265 @@
-import { useEffect, useState } from "react";
+// src/cart/orderStatus.jsx
+import { useEffect, useState, useContext } from "react";
+import { useSearchParams, useNavigate } from "react-router-dom";
+import { AuthContext } from "../context/AuthContext";
+import { getTrackingStatusAPI, cancelOrderAPI } from "../services/tracking.api";
+import axios from "axios";
 import "bootstrap/dist/css/bootstrap.min.css";
-import { CheckCircle, Timer, XCircle } from "lucide-react";
+import {
+  FaCheckCircle,
+  FaMapMarkerAlt,
+  FaCreditCard,
+  FaShoppingBag,
+} from "react-icons/fa";
 
-export default function OrderTracker() {
-  // Backend-aligned statuses
-  const stages = ["Pending", "In Progress", "Completed", "Delivered"];
+export default function OrderStatus() {
+  const { token } = useContext(AuthContext);
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const orderNumber = searchParams.get("order");
 
-  const [currentStage, setCurrentStage] = useState(0);
-  const [timestamps, setTimestamps] = useState([
-    new Date().toLocaleString(),
-  ]);
-  const [orderStatus, setOrderStatus] = useState("Pending"); // track real status
-  const orderId = "ORD123456";
+  const [order, setOrder] = useState(null);
+  const [items, setItems] = useState([]);
+  const [history, setHistory] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [cancelling, setCancelling] = useState(false);
 
-  // Simulate backend progress
+  async function loadOrder() {
+    if (!orderNumber) return;
+    try {
+      setLoading(true);
+
+      // tracking info (status + timeline)
+      const trackRes = await getTrackingStatusAPI(orderNumber, token);
+      const trackData = trackRes?.data?.data || {};
+
+      // order details (items, shipping, payment, totals)
+      const checkoutRes = await axios.get(
+        `http://localhost:4000/api/checkout/${orderNumber}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      const checkoutData = checkoutRes?.data?.data || {};
+
+      // Merge data safely: prefer checkoutData fields for amounts/items/shipping/payment
+      const merged = {
+        ...trackData.order,
+        ...(checkoutData.order || {}),
+        shipping_address:
+          checkoutData.shipping_address || checkoutData.shipping || null,
+        payment_method:
+          checkoutData.payment_method || checkoutData.payment || null,
+        masked_card: checkoutData.masked_card || checkoutData.masked || null,
+        grand_total:
+          checkoutData.grand_total ?? checkoutData.totals?.subtotal ?? null,
+        totals: checkoutData.totals || null,
+      };
+
+      setOrder(merged);
+      setItems(checkoutData.items || []);
+      setHistory(trackData.history || []);
+    } catch (err) {
+      console.error("Order status load error:", err?.response?.data || err);
+    } finally {
+      setLoading(false);
+    }
+  }
+
   useEffect(() => {
-    if (orderStatus === "Cancelled" || orderStatus === "Delivered") return;
+    loadOrder();
 
-    const timer = setTimeout(() => {
-      setCurrentStage((prev) => {
-        const newStage = prev + 1;
-        const nextStatus = stages[newStage] || "Delivered";
-        setTimestamps((t) => [...t, new Date().toLocaleString()]);
-        setOrderStatus(nextStatus);
-        return newStage;
-      });
-    }, 5000);
+    // poll faster so timeline updates appear quickly
+    const interval = setInterval(() => {
+      loadOrder();
+    }, 10000); // 10 seconds
 
-    return () => clearTimeout(timer);
-  }, [orderStatus]);
+    return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [orderNumber, token]);
 
-  // Cancel order (frontend simulation)
-  const handleCancelOrder = () => {
-    const confirmCancel = window.confirm(
-      "Are you sure you want to cancel this order?"
+  async function handleCancel() {
+    if (!orderNumber) return;
+    if (!window.confirm("Are you sure you want to cancel this order?")) return;
+
+    try {
+      setCancelling(true);
+      const res = await cancelOrderAPI(orderNumber, token);
+      if (res?.data?.success) {
+        // update UI
+        setOrder((o) =>
+          o ? { ...o, OrderStatus: "Cancelled", order_status: "Cancelled" } : o
+        );
+        setHistory((h) => [
+          ...(h || []),
+          { Status: "Cancelled", Timestamp: new Date().toISOString() },
+        ]);
+        window.dispatchEvent(
+          new CustomEvent("orderCanceled", { detail: { orderNumber } })
+        );
+        alert(res.data.message || "Order cancelled");
+      } else {
+        alert(res?.data?.message || "Unable to cancel");
+      }
+    } catch (err) {
+      console.error("Cancel error:", err?.response?.data || err);
+      alert("Cancel failed");
+    } finally {
+      setCancelling(false);
+      await loadOrder();
+    }
+  }
+
+  if (loading || !order) {
+    return (
+      <div className="text-center py-5" style={{ marginTop: "120px" }}>
+        Loading Order...
+      </div>
     );
-    if (!confirmCancel) return;
+  }
 
-    setOrderStatus("Cancelled");
-  };
+  // compute displayed total if backend didn't provide grand_total
+  const computedItemsTotal = items.reduce(
+    (s, it) => s + parseFloat(it.subtotal || it.sub_total || 0),
+    0
+  );
 
-  const isCancelled = orderStatus === "Cancelled";
-  const isDelivered = orderStatus === "Delivered";
+  const computedDelivery = parseFloat(
+    order.delivery_fee || order.totals?.delivery_fee || 0
+  );
+
+  const displayedTotal = order.grand_total
+    ? parseFloat(order.grand_total)
+    : computedItemsTotal + computedDelivery;
+
+  const statusValue = order.OrderStatus || order.order_status || "—";
+
+  const allowedToCancel =
+    statusValue === "Placed" || statusValue === "Being Prepared";
+
+  const isCancelled = statusValue === "Cancelled";
 
   return (
-    <section className="py-5 bg-light min-vh-100 d-flex justify-content-center align-items-center">
-      <div
-        className="bg-white shadow-sm p-5 rounded-4"
-        style={{
-          maxWidth: "700px",
-          width: "100%",
-          border: "1px solid #eaeaea",
-          marginTop: "100px",
-        }}
-      >
-        {/* Header */}
-        <div className="d-flex justify-content-between align-items-center mb-4">
-          <div>
-            <h5 className="fw-bold mb-1">{orderStatus}</h5>
-            <p className="text-muted small mb-0">
-              Updated at {timestamps[timestamps.length - 1]}
-            </p>
-          </div>
+    <div
+      className="container"
+      style={{ paddingTop: "120px", maxWidth: "900px" }}
+    >
+      <h2 className="fw-bold text-center mb-4" style={{ color: "#328286" }}>
+        Order Status
+      </h2>
 
-          {!isCancelled && !isDelivered && (
-            <button
-              className="btn btn-outline-danger btn-sm"
-              onClick={handleCancelOrder}
-            >
-              Cancel Order
-            </button>
-          )}
-        </div>
-
-        {/* Center Icon */}
-        <div className="text-center my-4">
-          <div
-            className="d-inline-flex align-items-center justify-content-center"
-            style={{
-              width: "120px",
-              height: "120px",
-              borderRadius: "60px",
-              backgroundColor: isCancelled
-                ? "#f8d7da"
-                : isDelivered
-                ? "#d4edda"
-                : "#e9f5f4",
-            }}
-          >
-            {isCancelled ? (
-              <XCircle size={70} color="#dc3545" />
-            ) : isDelivered ? (
-              <CheckCircle size={70} color="#28a745" />
-            ) : (
-              <Timer size={70} color="#5A8C89" />
-            )}
-          </div>
-          <p className="fw-semibold mt-3 mb-0">{orderStatus}</p>
-        </div>
-
-        {/* Timeline */}
-        <div className="mt-4 px-2">
-          {stages.map((stage, index) => {
-            const stageCompleted =
-              isCancelled ? false : index <= currentStage;
-            return (
-              <div key={index} className="d-flex align-items-center mb-4">
-                <div
-                  style={{
-                    width: "24px",
-                    height: "24px",
-                    borderRadius: "12px",
-                    backgroundColor: isCancelled
-                      ? "#dc3545"
-                      : stageCompleted
-                      ? "#5A8C89"
-                      : "#dee2e6",
-                    color: "white",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    marginRight: "10px",
-                  }}
-                >
-                  {stageCompleted ? "✓" : null}
-                </div>
-
-                <div>
-                  <p
-                    className={`mb-0 fw-semibold ${
-                      stageCompleted ? "text-dark" : "text-muted"
-                    }`}
-                  >
-                    {stage}
-                  </p>
-                  <small className="text-muted">
-                    {timestamps[index] ? timestamps[index] : "Pending..."}
-                  </small>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Order Info */}
+      <div className="card shadow-sm mb-4" style={{ borderRadius: "18px" }}>
         <div
-          className="mt-4 p-3 rounded-3"
-          style={{ backgroundColor: "#f8f9fa", border: "1px solid #eee" }}
+          className="card-header"
+          style={{ background: "#81A4A6", color: "white" }}
         >
-          <p className="mb-1 fw-semibold">Order ID: #{orderId}</p>
-          <p className="mb-1 small text-muted">
-            {isCancelled
-              ? "This order was cancelled."
-              : isDelivered
-              ? "Delivered"
-              : "Approx. " +
-                (15 - currentStage * 5) +
-                " mins remaining"}
+          Order #{orderNumber}
+        </div>
+        <div className="card-body">
+          <p>
+            <strong>Status:</strong> {statusValue}
           </p>
-          <p className="mb-0 small text-muted">Total: $45.78</p>
+          <p>
+            <strong>Date:</strong>{" "}
+            {order.OrderDate
+              ? new Date(order.OrderDate).toLocaleString()
+              : order.order_date
+              ? new Date(order.order_date).toLocaleString()
+              : "—"}
+          </p>
+          <p>
+            <strong>Total:</strong> $
+            {isNaN(displayedTotal) ? "—" : displayedTotal.toFixed(2)}
+          </p>
+
+          <div className="mt-3">
+            {isCancelled ? (
+              <button className="btn btn-secondary" disabled>
+                Order Cancelled
+              </button>
+            ) : allowedToCancel ? (
+              <button
+                className="btn btn-danger"
+                onClick={handleCancel}
+                disabled={cancelling}
+              >
+                {cancelling ? "Cancelling..." : "Cancel Order"}
+              </button>
+            ) : (
+              <button className="btn btn-secondary" disabled>
+                Cannot cancel at this stage
+              </button>
+            )}
+
+            <button
+              className="btn btn-outline-primary ms-2"
+              onClick={() => navigate(`/profile`)}
+            >
+              My Orders
+            </button>
+          </div>
         </div>
       </div>
-    </section>
+
+      {/* ITEMS */}
+      <div className="card shadow-sm mb-4" style={{ borderRadius: "18px" }}>
+        <div
+          className="card-header"
+          style={{ background: "#81A4A6", color: "white" }}
+        >
+          <FaShoppingBag className="me-2" /> Ordered Items
+        </div>
+
+        <ul className="list-group list-group-flush">
+          {items.length === 0 && (
+            <li className="list-group-item text-muted">No items found.</li>
+          )}
+          {items.map((i, idx) => (
+            <li
+              key={idx}
+              className="list-group-item d-flex justify-content-between"
+            >
+              <div>
+                <strong>{i.ItemName || i.item_name}</strong>
+                <br />
+                <small className="text-muted">
+                  {(i.Quantity || i.quantity) ?? "—"} × $
+                  {parseFloat(i.Price || i.price || 0).toFixed(2)}
+                </small>
+              </div>
+              <strong className="text-success">
+                ${parseFloat(i.subtotal || i.sub_total || 0).toFixed(2)}
+              </strong>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      {/* TIMELINE */}
+      <div className="card shadow-sm mb-5" style={{ borderRadius: "18px" }}>
+        <div
+          className="card-header"
+          style={{ background: "#81A4A6", color: "white" }}
+        >
+          Order Timeline
+        </div>
+
+        <div className="card-body">
+          {history.length === 0 && (
+            <div className="text-muted">No timeline available.</div>
+          )}
+          {history.map((step, i) => (
+            <div key={i} className="d-flex align-items-start mb-3">
+              <FaCheckCircle className="text-success me-3" />
+              <div>
+                <strong>{step.Status}</strong>
+                <br />
+                <small className="text-muted">
+                  {new Date(step.Timestamp).toLocaleString()}
+                </small>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
   );
 }
