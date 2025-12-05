@@ -6,13 +6,15 @@ import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import image from "../../assets/auth.png";
 import admin from "../../assets/eos-icons_admin.png";
-import { Link, NavLink, useNavigate } from "react-router-dom";
+import { Link, NavLink, useNavigate, useSearchParams } from "react-router-dom";
 import { useContext } from "react";
 import { AuthContext } from "../../context/AuthContext";
 
 export default function Login() {
   const { login } = useContext(AuthContext);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const redirectPath = searchParams.get("redirect") || "/"; // fallback if no redirect
 
   const {
     register,
@@ -26,15 +28,13 @@ export default function Login() {
     const result = await loginUser(data);
 
     if (result.success) {
-      // ✅ تخزين الـ token و بيانات الـ user في الـ context
       await login(data, result.data.token);
+      toast.success(result.message, { autoClose: 2000 });
 
-      toast.success(result.message, { autoClose: 3000 });
-
-      // ⏱ إعادة التوجيه بعد 2.5 ثانية
+      // ✅ after successful login, go back to original page or home
       setTimeout(() => {
-        navigate("/"); // توجه للصفحة الرئيسية بعد تسجيل الدخول
-      }, 2500);
+        navigate(redirectPath, { replace: true });
+      }, 2000);
     } else {
       toast.error(result.message);
     }
@@ -179,12 +179,12 @@ export default function Login() {
 
             <p className="text-center mt-3" style={{ fontSize: "0.9rem" }}>
               Don't have an account?{" "}
-              <a
-                href="/auth/register"
+              <Link
+                to="/auth/register"
                 style={{ color: "#328286", fontWeight: "600" }}
               >
                 Sign Up
-              </a>
+              </Link>
             </p>
           </form>
         </div>

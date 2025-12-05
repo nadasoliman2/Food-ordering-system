@@ -1,6 +1,5 @@
-// src/pages/ProductDetails.jsx
-import { useParams } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useParams, useNavigate,useLocation  } from "react-router-dom";
+import { useState, useEffect, useContext } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import ReviewCard from "../Components/reviewCard";
 import { useCart } from "../context/CartContext";
@@ -8,14 +7,18 @@ import AddReviewModal from "../Components/addReviewModel";
 import FloatingMessageCard from "../Components/floatingMessageCard";
 import { getItemDetails } from "../services/itemApi";
 import { fetchReviews, addReview } from "../services/reviewsApi";
+import { AuthContext } from "../context/AuthContext";
+
 
 export default function ProductDetails() {
-  const { restaurantName, itemName } = useParams(); // ✅ Correct param names
+  const { restaurantName, itemName } = useParams();
   const { addToCart } = useCart();
+  const { user, token } = useContext(AuthContext);
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const [item, setItem] = useState(null);
   const [recommended, setRecommended] = useState([]);
-
   const [reviews, setReviews] = useState([]);
   const [avgRating, setAvgRating] = useState(0);
   const [reviewCount, setReviewCount] = useState(0);
@@ -33,11 +36,14 @@ export default function ProductDetails() {
         setLoading(true);
         const res = await getItemDetails(restaurantName, itemName);
         const data = res.data.data;
-
+        
         setItem(data.item);
+        console.log("Fetched item:", data.item);
         setRecommended(data.recommended || []);
-
-        await loadReviews(data.item.restaurant_name || restaurantName, data.item.item_name);
+        await loadReviews(
+          data.item.restaurant_name || restaurantName,
+          data.item.item_name
+        );
       } catch (err) {
         console.error("Error fetching item details:", err);
       } finally {
@@ -64,28 +70,44 @@ export default function ProductDetails() {
   const increase = () => setQuantity(quantity + 1);
   const decrease = () => quantity > 1 && setQuantity(quantity - 1);
 
+  // ✅ Add-to-cart handler with auth check
   const handleAddToCart = async () => {
+    if (!user || !token) {
+      alert("Please sign in first to add items to your cart.");
+      return navigate(`/auth/login?redirect=${encodeURIComponent(location.pathname)}`);
+    }
+
     await addToCart(item, quantity, selectedSize, restaurantName);
     setShowSuccess(true);
     setTimeout(() => setShowSuccess(false), 2500);
   };
 
+  // ✅ Add review handler with auth check
   const handleReviewSubmit = async ({ rating, comment }) => {
+    if (!user || !token) {
+      alert("Please sign in first to add a review.");
+     return navigate(`/auth/login?redirect=${encodeURIComponent(location.pathname)}`);
+    }
+
     try {
       if (!rating) return alert("Please select a rating");
+
       await addReview({
-        user_id: 1,
         restaurant_name: restaurantName,
         item_name: item.item_name,
         rating,
         review: comment,
       });
+
       await loadReviews(restaurantName, item.item_name);
       setShowReviewModal(false);
       setShowReviewSubmitted(true);
       setTimeout(() => setShowReviewSubmitted(false), 2500);
     } catch (err) {
-      alert("Failed to submit review: " + (err.response?.data?.message || err.message));
+      alert(
+        "Failed to submit review: " +
+          (err.response?.data?.message || err.message)
+      );
     }
   };
 
@@ -93,6 +115,7 @@ export default function ProductDetails() {
 
   return (
     <>
+      {/* Product section */}
       <section className="py-5">
         <div className="container" style={{ marginTop: "70px" }}>
           <div className="row align-items-center">
@@ -179,58 +202,34 @@ export default function ProductDetails() {
           </div>
         </div>
 
-        <button
-          className="btn btn-lg px-5 text-white"
-          style={{
-            backgroundColor: "#7FA9A3",
-            borderRadius: "30px",
-            marginLeft: "75%",
-            marginTop: "30px",
-          }}
-          onClick={() => setShowReviewModal(true)}
-        >
-          Add Review
-        </button>
+        {user ? (
+          <button
+            className="btn btn-lg px-5 text-white"
+            style={{
+              backgroundColor: "#7FA9A3",
+              borderRadius: "30px",
+              marginLeft: "75%",
+              marginTop: "30px",
+            }}
+            onClick={() => setShowReviewModal(true)}
+          >
+            Add Review
+          </button>
+        ) : (
+          <p className="text-muted text-end me-5">
+            Sign in to add a review.
+          </p>
+        )}
       </section>
 
-      {/* Recommended */}
-      {recommended?.length > 0 && (
-        <section className="py-5">
-          <div className="container">
-            <h3 className="fw-bold mb-4">Recommended for You</h3>
-            <div className="row g-4">
-              {recommended.map((rec, idx) => (
-                <div className="col-md-4" key={idx}>
-                  <div className="card border-0 shadow-sm">
-                    <img
-                      src={`http://localhost:4000/${rec.image_url}`}
-                      alt={rec.item_name}
-                      className="card-img-top"
-                      style={{ height: "200px", objectFit: "cover" }}
-                    />
-                    <div className="card-body">
-                      <h5 className="fw-bold">{rec.item_name}</h5>
-                      <p className="text-muted mb-1">{rec.description}</p>
-                      <div className="d-flex justify-content-between">
-                        <span className="fw-bold text-success">${rec.price}</span>
-                        <small className="text-muted">
-                          ⭐ {rec.avg_rating} ({rec.review_count})
-                        </small>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
-
+  
+      {/* Floating messages */}
       {showSuccess && <FloatingMessageCard message="Added to cart successfully!" />}
       {showReviewSubmitted && (
         <FloatingMessageCard message="Review submitted successfully!" />
       )}
 
+      {/* Modal */}
       <AddReviewModal
         show={showReviewModal}
         onClose={() => setShowReviewModal(false)}

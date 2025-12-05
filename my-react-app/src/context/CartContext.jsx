@@ -1,60 +1,85 @@
-import  { createContext, useContext, useState, useEffect } from "react";
+import { createContext, useContext, useState, useEffect } from "react";
 import {
   addToCartAPI,
   getCartAPI,
   removeFromCartAPI,
   incrementCartItemAPI,
   decrementCartItemAPI,
+  clearCartAPI,
 } from "../services/cartApi";
+import { AuthContext } from "./AuthContext";
 
 const CartContext = createContext();
 
 export const CartProvider = ({ children }) => {
   const [cartItems, setCartItems] = useState([]);
-  const userId = 1; // temporary static user id
+  const { user, token } = useContext(AuthContext);
 
   useEffect(() => {
-    loadCart();
-  }, []);
- 
-  const loadCart = async () => {
-    try {
-      const res = await getCartAPI(userId);
-      const data = res.data.data;
-
-      if (!data || !data.items) return;
-
-      const formatted = data.items.map((item) => ({
-        id: `${item.ItemName}-${item.Size}-${item.RestaurantName || ""}`,
-        name: item.ItemName,
-        price: parseFloat(item.Price),
-        quantity: item.Quantity,
-        size: item.Size,
-        restaurant: item.RestaurantName || "",
-        subtotal: parseFloat(item.subtotal || 0),
-      }));
-      console.log("Cart data from backend:", data.items);
-      setCartItems(formatted);
-    } catch (err) {
-      console.error("Error fetching cart:", err);
+    if (user && token) {
+      loadCart();
+    } else {
+      setCartItems([]);
     }
+  }, [user, token]);
+
+ const loadCart = async () => {
+  if (!token) return;
+
+  try {
+    const res = await getCartAPI(token);
+    const data = res.data.data;
+
+    // 🧩 if backend sends something invalid or empty, just clear cart (first-time login)
+    if (!data || !Array.isArray(data.items)) {
+      setCartItems([]);
+      return;
+    }
+
+    // 🧩 if user truly has an empty cart
+    if (data.items.length === 0) {
+      setCartItems([]);
+      return;
+    }
+
+    // ✅ otherwise, safely map items
+    const formatted = data.items
+      .filter((item) => item && (item.Price || item.price))
+      .map((item) => ({
+        id: `${item.ItemName || item.item_name}-${item.Size || item.size}-${item.RestaurantName || item.restaurant_name || ""}`,
+        ItemID: item.ItemID || item.item_id || null,
+        name: item.ItemName || item.item_name || "Unnamed Item",
+        price: Number(item.Price || item.price) || 0,
+        quantity: Number(item.Quantity || item.quantity) || 0,
+        size: item.Size || item.size || "Medium",
+        restaurant: item.RestaurantName || item.restaurant_name || "",
+        subtotal: Number(item.subtotal || item.Subtotal) || 0,
+      }));
+
+    setCartItems(formatted);
+  } catch (err) {
+    console.error("Error fetching cart:", err.response?.data || err.message);
+  }
+};
+  const checkAuth = () => {
+    if (!user || !token) {
+      alert("Please sign in to perform this action.");
+      return false;
+    }
+    return true;
   };
 
-  const addToCart = async (
-    product,
-    quantity = 1,
-    size = "Medium",
-    restaurantName = ""
-  ) => {
+  const addToCart = async (product, quantity = 1, size = "Medium", restaurantName = "") => {
+    if (!checkAuth()) return;
+
+    const payload = {
+      item_id: product.item_id,
+      quantity,
+      size,
+    };
+
     try {
-      const payload = {
-        user_id: userId,
-        item_name: product.ItemName,
-        restaurant_name: restaurantName || product.RestaurantName,
-        quantity,
-        size,
-      };
-      await addToCartAPI(payload);
+      await addToCartAPI(payload, token);
       await loadCart();
     } catch (err) {
       console.error("Error adding to cart:", err);
@@ -62,41 +87,28 @@ export const CartProvider = ({ children }) => {
   };
 
   const removeFromCart = async (id) => {
+    if (!checkAuth()) return;
+    const item = cartItems.find((i) => i.id === id);
+    if (!item) return;
+
+    const payload = { item_id: item.ItemID, size: item.size };
+
     try {
-      const item = cartItems.find((i) => i.id === id);
-      if (!item) return;
-
-      const payload = {
-        user_id: userId,
-        item_name: item.name,
-        restaurant_name: item.restaurant,
-        size: item.size,
-      };
-
-      await removeFromCartAPI(payload);
-
-      // update UI instantly
+      await removeFromCartAPI(payload, token);
       setCartItems((prev) => prev.filter((i) => i.id !== id));
     } catch (err) {
       console.error("Error removing from cart:", err);
     }
   };
 
-  // 👇 Optimistic increment update
   const increaseQty = async (id) => {
+    if (!checkAuth()) return;
     const item = cartItems.find((i) => i.id === id);
     if (!item) return;
 
-    const payload = {
-      user_id: userId,
-      item_name: item.name,
-      restaurant_name: item.restaurant,
-      size: item.size,
-    };
-
+    const payload = { item_id: item.ItemID, size: item.size };
     try {
-      await incrementCartItemAPI(payload);
-
+      await incrementCartItemAPI(payload, token);
       setCartItems((prev) =>
         prev.map((i) =>
           i.id === id ? { ...i, quantity: i.quantity + 1 } : i
@@ -107,20 +119,14 @@ export const CartProvider = ({ children }) => {
     }
   };
 
-  // 👇 Optimistic decrement update
   const decreaseQty = async (id) => {
+    if (!checkAuth()) return;
     const item = cartItems.find((i) => i.id === id);
     if (!item) return;
 
-    const payload = {
-      user_id: userId,
-      item_name: item.name,
-      restaurant_name: item.restaurant,
-      size: item.size,
-    };
-
+    const payload = { item_id: item.ItemID, size: item.size };
     try {
-      await decrementCartItemAPI(payload);
+      await decrementCartItemAPI(payload, token);
 
       if (item.quantity === 1) {
         setCartItems((prev) => prev.filter((i) => i.id !== id));
@@ -137,21 +143,14 @@ export const CartProvider = ({ children }) => {
   };
 
   const clearCart = async () => {
-  try {
-    for (const item of cartItems) {
-      const payload = {
-        user_id: userId,
-        item_name: item.name,
-        restaurant_name: item.restaurant,
-        size: item.size,
-      };
-      await removeFromCartAPI(payload);
+    if (!checkAuth()) return;
+    try {
+      await clearCartAPI(token);
+      setCartItems([]);
+    } catch (err) {
+      console.error("Error clearing cart:", err);
     }
-    setCartItems([]); // clear in frontend too
-  } catch (err) {
-    console.error("Error clearing cart:", err);
-  }
-};
+  };
 
   return (
     <CartContext.Provider
