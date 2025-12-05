@@ -20,6 +20,7 @@ export default function PopularDishesSection() {
 
   // These selected items are your "popular" ones
   const popularDishes = allRestaurants;
+  console.log( popularDishes )
 
   return (
     <section className="popular-dishes py-1">

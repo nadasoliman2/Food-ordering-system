@@ -1,9 +1,11 @@
-import React, { useState } from "react";
+import  { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
+import { useCart } from "../context/CartContext"; 
 
 export default function Checkout() {
   const navigate = useNavigate();
+  const { clearCart } = useCart();
   const [paymentMethod, setPaymentMethod] = useState("cash");
   const [formData, setFormData] = useState({
     name: "",
@@ -24,7 +26,7 @@ export default function Checkout() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     // Validate required fields
@@ -54,6 +56,8 @@ export default function Checkout() {
     }
 
     // If all good:
+    await clearCart();
+
     alert("Order placed successfully!");
     navigate("/orderStatus");
   };

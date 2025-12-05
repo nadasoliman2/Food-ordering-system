@@ -3,6 +3,7 @@ import image from "../../../assets/login.png";
 import "@fortawesome/fontawesome-free/css/all.min.css";
 import admin from "../../../assets/solar_user-bold.png";
 import { Link } from "react-router-dom";
+import { NavLink } from "react-bootstrap";
 
 export default function AdminLogin() {
   const {
@@ -77,12 +78,15 @@ export default function AdminLogin() {
     <div style={containerStyle}>
       <div style={cardStyle}>
         <div style={leftPanelStyle}>
+                   <NavLink to="/" style={{textDecoration:"none"}} >
+          
           <h2
-            className="text-center"
+            className="text-center mt-5"
             style={{ color: "#81A4A6", fontFamily: "Lobster, sans-serif" }}
           >
             YumYard
           </h2>
+         </NavLink>
           <div className="d-flex align-items-center justify-content-between mb-4">
             <h4 className="mb-2" style={{ fontWeight: "500" }}>
               Sign in

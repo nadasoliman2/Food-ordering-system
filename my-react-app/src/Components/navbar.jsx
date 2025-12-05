@@ -1,17 +1,21 @@
-// Navbar.jsx
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faMagnifyingGlass } from "@fortawesome/free-solid-svg-icons";
-import { NavLink } from "react-router-dom";
-import { Link, useLocation } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
+import { useContext } from "react";
+import { AuthContext } from "../context/AuthContext";
 
 export default function AppNavbar() {
   const location = useLocation();
-
+  const { user, token, logout } = useContext(AuthContext);
 
   const isRestaurantActive =
     location.pathname.startsWith("/restaurants") ||
     location.pathname.startsWith("/menu") ||
     location.pathname.startsWith("/product");
+
+ const handleLogout = () => {
+  setTimeout(() => {
+    logout();
+  }, 2500); 
+};
 
   return (
     <nav
@@ -62,16 +66,20 @@ export default function AppNavbar() {
                 Restaurants
               </NavLink>
             </li>
-            <li className="nav-item">
-              <NavLink
-                to="/cart"
-                className={({ isActive }) =>
-                  "nav-link" + (isActive ? " active" : "")
-                }
-              >
-                Cart
-              </NavLink>
-            </li>
+
+            {/* Cart يظهر فقط لو مسجل دخول */}
+            {token && (
+              <li className="nav-item">
+                <NavLink
+                  to="/cart"
+                  className={({ isActive }) =>
+                    "nav-link" + (isActive ? " active" : "")
+                  }
+                >
+                  Cart
+                </NavLink>
+              </li>
+            )}
 
             <li className="nav-item">
               <NavLink
@@ -84,7 +92,6 @@ export default function AppNavbar() {
               </NavLink>
             </li>
 
-            {/* ⭐ Contact Us → About + Scroll using NavLink */}
             <li className="nav-item">
               <NavLink
                 to="/about#about-contact-section"
@@ -115,22 +122,49 @@ export default function AppNavbar() {
           </ul>
         </div>
 
+        {/* Right side buttons */}
         <div className="d-flex align-items-center custom-actions">
-          <NavLink to="/auth/login" className="btn me-3  sign " style={{  borderRadius: "20px",}}>
-            Sign In
-          </NavLink>
+          {/* لو مش مسجل دخول */}
+          {!token && (
+            <>
+              <NavLink
+                to="/auth/login"
+                className="btn me-3 sign"
+                style={{ borderRadius: "20px" }}
+              >
+                Sign In
+              </NavLink>
+              <NavLink
+                to="/auth/register"
+                className="btn custom-signup-btn"
+                style={{
+                  background: "#81A4A6",
+                  color: "white",
+                  borderRadius: "20px",
+                }}
+              >
+                Sign Up
+              </NavLink>
+            </>
+          )}
 
-          <NavLink
-            to="/auth/register"
-            className="btn custom-signup-btn "
-            style={{
-              background: "#81A4A6",
-              color: "white",
-              borderRadius: "20px",
-            }}
-          >
-            Sign Up
-          </NavLink>
+          {/* لو مسجل دخول */}
+          {token && user && (
+            <>
+              <span className="me-3  " style={{fontWeight:"bold", color:"#81A4A6" , fontSize:"18px"}}>Hi, {user.username}</span>
+              <button
+                onClick={handleLogout}
+                className="btn"
+                style={{
+                  background: "#f44336",
+                  color: "white",
+                  borderRadius: "20px",
+                }}
+              >
+                Logout
+              </button>
+            </>
+          )}
         </div>
       </div>
     </nav>

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import  { useEffect, useState } from "react";
 import RestaurantCard from "../Components/RestaurantCard";
 import { getRestaurants, searchRestaurants } from "../services/restaurantApi";
 
@@ -7,7 +7,23 @@ export default function Restaurants() {
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Fetch all restaurants on initial load
+  // ✅ Helper function to fix image URLs
+  const resolveImageURL = (url) => {
+    if (!url) return "/restaurant.jpg"; // fallback image
+
+    // Special case: fix the known broken ibb.co URL
+    if (url === "https://ibb.co/mrTqphqq") {
+      return "/frontend/resources/IMG-8654.jpg";
+    }
+
+    // Keep all valid full URLs unchanged
+    if (url.startsWith("http")) return url;
+
+    // Fix local relative paths
+    return `/${url.replace(/^\/?public[\\/]/, "").replace(/\\/g, "/")}`;
+  };
+
+  // ✅ Fetch all restaurants on initial load
   useEffect(() => {
     async function fetchRestaurants() {
       try {
@@ -25,7 +41,7 @@ export default function Restaurants() {
     fetchRestaurants();
   }, []);
 
-  // Handle search
+  // ✅ Handle search functionality
   const handleSearchChange = async (e) => {
     const searchValue = e.target.value;
     setSearchTerm(searchValue);
@@ -72,7 +88,8 @@ export default function Restaurants() {
             key={index}
             name={rest.restaurant_name}
             rating={rest.rating}
-            imageUrl={rest.image_url}
+            // ✅ Apply the resolver here
+            imageUrl={resolveImageURL(rest.image_url)}
             id={index}
           />
         ))

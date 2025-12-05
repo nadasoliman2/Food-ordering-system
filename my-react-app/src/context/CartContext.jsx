@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
+import  { createContext, useContext, useState, useEffect } from "react";
 import {
   addToCartAPI,
   getCartAPI,
@@ -16,7 +16,7 @@ export const CartProvider = ({ children }) => {
   useEffect(() => {
     loadCart();
   }, []);
-
+ 
   const loadCart = async () => {
     try {
       const res = await getCartAPI(userId);
@@ -136,6 +136,23 @@ export const CartProvider = ({ children }) => {
     }
   };
 
+  const clearCart = async () => {
+  try {
+    for (const item of cartItems) {
+      const payload = {
+        user_id: userId,
+        item_name: item.name,
+        restaurant_name: item.restaurant,
+        size: item.size,
+      };
+      await removeFromCartAPI(payload);
+    }
+    setCartItems([]); // clear in frontend too
+  } catch (err) {
+    console.error("Error clearing cart:", err);
+  }
+};
+
   return (
     <CartContext.Provider
       value={{
@@ -145,6 +162,7 @@ export const CartProvider = ({ children }) => {
         increaseQty,
         decreaseQty,
         loadCart,
+        clearCart,
       }}
     >
       {children}

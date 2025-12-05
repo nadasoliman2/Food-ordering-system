@@ -121,7 +121,7 @@ export default function Address() {
   };
 
   return (
-    <div className="min-vh-100">
+    <div className="min-vh-70">
       <div className="container-lg py-3">
         <h2 className="fw-bold mb-4" style={{ fontSize: '28px', color: '#69a297' }}>My Addresses</h2>
 
