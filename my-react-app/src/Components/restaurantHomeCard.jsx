@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 
-export default function RestaurantHomeCard({ name, image }) {
+export default function RestaurantHomeCard({ name, image, rating }) {
   const navigate = useNavigate();
 
   return (
@@ -47,6 +47,18 @@ export default function RestaurantHomeCard({ name, image }) {
           }}
         />
       </div>
+
+      {/* Rating section ( */}
+      <div
+        className="text-center mb-1"
+        style={{
+          fontSize: "0.85rem",
+          fontWeight: "bold",
+        }}
+      >
+        ⭐ {rating}
+      </div>
+
 
       {/* اسم المطعم */}
       <h6
