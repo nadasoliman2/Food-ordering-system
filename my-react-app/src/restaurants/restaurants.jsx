@@ -33,6 +33,7 @@ export default function Restaurants() {
     if (searchValue.trim() === "") {
       const res = await getRestaurants();
       setRestaurants(res.data.data.restaurants);
+      console.log(res.data.data.restaurants)
     } else {
       try {
         const res = await searchRestaurants(searchValue);
