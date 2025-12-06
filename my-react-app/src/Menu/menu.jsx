@@ -118,7 +118,7 @@ export function Menu() {
               src={
                 restaurantDetails.imageUrl?.startsWith("http")
                   ? restaurantDetails.imageUrl
-                  : restaurantDetails.imageUrl?.replace(/^\/+/, "")
+                  : restaurantDetails.imageUrl
               }
               alt={restaurantDetails.name}
               className="rounded-4 mb-3"

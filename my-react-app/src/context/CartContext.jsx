@@ -23,44 +23,66 @@ export const CartProvider = ({ children }) => {
     }
   }, [user, token]);
 
- const loadCart = async () => {
-  if (!token) return;
+  // ✅ Fixed version with proper image support
+  const loadCart = async () => {
+    if (!token) return;
 
-  try {
-    const res = await getCartAPI(token);
-    const data = res.data.data;
+    try {
+      const res = await getCartAPI(token);
+      const data = res.data.data;
 
-    // 🧩 if backend sends something invalid or empty, just clear cart (first-time login)
-    if (!data || !Array.isArray(data.items)) {
-      setCartItems([]);
-      return;
+      // 🧩 handle empty/invalid cart response
+      if (!data || !Array.isArray(data.items)) {
+        setCartItems([]);
+        return;
+      }
+
+      if (data.items.length === 0) {
+        setCartItems([]);
+        return;
+      }
+
+      // ✅ Map and normalize all fields (including image)
+      const formatted = data.items
+        .filter((item) => item && (item.Price || item.price))
+        .map((item) => {
+          // 🧩 Grab the image from all possible field names (now includes ImageURL)
+          const rawImage =
+            item.ImageURL || item.Image || item.image || item.image_url || "";
+
+          // 🧩 Normalize slashes and enforce leading slash
+          let normalizedImage = "/placeholder.jpg";
+          if (rawImage) {
+            const cleanedPath = rawImage.replace(/\\/g, "/");
+
+            normalizedImage = cleanedPath.startsWith("http")
+              ? cleanedPath
+              : cleanedPath.startsWith("/")
+                ? cleanedPath
+                : "/" + cleanedPath; // 🔥 Force leading slash
+          }
+
+          console.log("Raw image:", rawImage, "→ Normalized:", normalizedImage);
+
+          return {
+            id: `${item.ItemName || item.item_name}-${item.Size || item.size}-${item.RestaurantName || item.restaurant_name || ""}`,
+            ItemID: item.ItemID || item.item_id || null,
+            name: item.ItemName || item.item_name || "Unnamed Item",
+            price: Number(item.Price || item.price) || 0,
+            quantity: Number(item.Quantity || item.quantity) || 0,
+            size: item.Size || item.size || "Medium",
+            restaurant: item.RestaurantName || item.restaurant_name || "",
+            subtotal: Number(item.subtotal || item.Subtotal) || 0,
+            image: normalizedImage, // ✅ now added
+          };
+        });
+
+      setCartItems(formatted);
+    } catch (err) {
+      console.error("Error fetching cart:", err.response?.data || err.message);
     }
+  };
 
-    // 🧩 if user truly has an empty cart
-    if (data.items.length === 0) {
-      setCartItems([]);
-      return;
-    }
-
-    // ✅ otherwise, safely map items
-    const formatted = data.items
-      .filter((item) => item && (item.Price || item.price))
-      .map((item) => ({
-        id: `${item.ItemName || item.item_name}-${item.Size || item.size}-${item.RestaurantName || item.restaurant_name || ""}`,
-        ItemID: item.ItemID || item.item_id || null,
-        name: item.ItemName || item.item_name || "Unnamed Item",
-        price: Number(item.Price || item.price) || 0,
-        quantity: Number(item.Quantity || item.quantity) || 0,
-        size: item.Size || item.size || "Medium",
-        restaurant: item.RestaurantName || item.restaurant_name || "",
-        subtotal: Number(item.subtotal || item.Subtotal) || 0,
-      }));
-
-    setCartItems(formatted);
-  } catch (err) {
-    console.error("Error fetching cart:", err.response?.data || err.message);
-  }
-};
   const checkAuth = () => {
     if (!user || !token) {
       alert("Please sign in to perform this action.");
@@ -80,7 +102,15 @@ export const CartProvider = ({ children }) => {
 
     try {
       await addToCartAPI(payload, token);
+      // Manually add image locally while waiting for backend to update
       await loadCart();
+      setCartItems(prev =>
+        prev.map(i =>
+          i.ItemID === product.item_id
+            ? { ...i, image: product.image_url || product.image || "/placeholder.jpg" }
+            : i
+        )
+      );
     } catch (err) {
       console.error("Error adding to cart:", err);
     }

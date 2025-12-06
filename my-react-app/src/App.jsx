@@ -1,7 +1,7 @@
 import "./App.css";
 import { Routes, Route, Navigate } from "react-router-dom";
 import Home from "./Home/home";
-import React, { useContext } from "react";
+import { useContext } from "react";
 import Layout from "./layout";
 import { Menu } from "./Menu/menu";
 import Cart from "./cart/Cart.jsx";
@@ -19,6 +19,7 @@ import SalesReport from "./AdminPanel/componentadmin/SalesReport.jsx";
 import Checkout from "./cart/checkout.jsx";
 import OrderStatus from "./cart/orderStatus.jsx";
 import { AuthContext } from "./context/AuthContext";
+
 
 function App() {
   const { user } = useContext(AuthContext);
@@ -69,6 +70,8 @@ function App() {
           <Route path="sales" element={<SalesReport />} />
         </Route>
       </Routes>
+
+    
     </>
   );
 }

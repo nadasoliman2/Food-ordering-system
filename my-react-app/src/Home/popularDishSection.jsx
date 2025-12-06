@@ -8,6 +8,7 @@ export default function PopularDishesSection() {
   useEffect(() => {
     const fetchDishes = async () => {
       const data = await getPopularDishes();
+      console.log(data)
       setPopularDishes(data);
     };
 
