@@ -1,4 +1,3 @@
-// src/cart/checkout.jsx
 import { useEffect, useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
@@ -12,10 +11,12 @@ import { getaddress } from "../services/Address/getaddressApi";
 import { getpayments } from "../services/payments/getpaymentsApi";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { FaMapMarkerAlt, FaCreditCard, FaShoppingBag } from "react-icons/fa";
+import { useCart } from "../context/CartContext"; // ✅ added import
 
 export default function Checkout() {
   const { token } = useContext(AuthContext);
   const navigate = useNavigate();
+  const { clearCart } = useCart(); // ✅ use clearCart from context
 
   const [summary, setSummary] = useState(null);
   const [addresses, setAddresses] = useState([]);
@@ -213,6 +214,13 @@ export default function Checkout() {
       if (res?.data?.success) {
         const orderNum = res.data.data.order_number;
 
+        // 🧹 Clear frontend cart immediately after successful order
+        try {
+          await clearCart();
+        } catch (e) {
+          console.warn("Could not clear cart after checkout:", e);
+        }
+
         // Save last placed order so Profile can retry fetch quickly
         try {
           localStorage.setItem("lastPlacedOrder", orderNum);
@@ -304,6 +312,7 @@ export default function Checkout() {
         </div>
 
         <div className="col-lg-7">
+          {/* Address Section */}
           <div className="card shadow-sm mb-4" style={{ borderRadius: "18px" }}>
             <div
               className="card-header"
@@ -375,6 +384,7 @@ export default function Checkout() {
             </form>
           </div>
 
+          {/* Payment Section */}
           <div className="card shadow-sm mb-4" style={{ borderRadius: "18px" }}>
             <div
               className="card-header"
@@ -444,7 +454,10 @@ export default function Checkout() {
                     placeholder="Card Number"
                     value={newPayment.number}
                     onChange={(e) =>
-                      setNewPayment({ ...newPayment, number: e.target.value })
+                      setNewPayment({
+                        ...newPayment,
+                        number: e.target.value,
+                      })
                     }
                     required
                   />
@@ -482,6 +495,7 @@ export default function Checkout() {
             </form>
           </div>
 
+          {/* Place Order Button */}
           <button
             className="btn w-100 py-3 mb-5"
             style={{

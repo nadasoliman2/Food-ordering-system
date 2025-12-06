@@ -7,6 +7,7 @@ export const getItemDetails = async (restaurantName, itemName) => {
     const response = await axios.get(
       `${API}/items/${restaurantName}/${itemName}`
     );
+    console.log(response.data);
     return response;
   } catch (err) {
     console.error("Error fetching item details:", err);

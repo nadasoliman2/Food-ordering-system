@@ -10,6 +10,7 @@ import { fetchReviews, addReview } from "../services/reviewsApi";
 import { AuthContext } from "../context/AuthContext";
 import { toast } from "react-toastify";
 
+
 export default function ProductDetails() {
   const { restaurantName, itemName } = useParams();
   const { addToCart } = useCart();

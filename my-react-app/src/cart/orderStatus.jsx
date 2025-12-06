@@ -1,4 +1,3 @@
-// src/cart/orderStatus.jsx
 import { useEffect, useState, useContext } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
@@ -27,20 +26,17 @@ export default function OrderStatus() {
   async function loadOrder() {
     if (!orderNumber) return;
     try {
-      setLoading(true);
+      const [trackRes, checkoutRes] = await Promise.all([
+        getTrackingStatusAPI(orderNumber, token),
+        axios.get(`http://localhost:4000/api/checkout/${orderNumber}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+      ]);
 
-      // tracking info (status + timeline)
-      const trackRes = await getTrackingStatusAPI(orderNumber, token);
       const trackData = trackRes?.data?.data || {};
-
-      // order details (items, shipping, payment, totals)
-      const checkoutRes = await axios.get(
-        `http://localhost:4000/api/checkout/${orderNumber}`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
       const checkoutData = checkoutRes?.data?.data || {};
 
-      // Merge data safely: prefer checkoutData fields for amounts/items/shipping/payment
+      // Merge order info from both APIs safely
       const merged = {
         ...trackData.order,
         ...(checkoutData.order || {}),
@@ -54,9 +50,23 @@ export default function OrderStatus() {
         totals: checkoutData.totals || null,
       };
 
-      setOrder(merged);
-      setItems(checkoutData.items || []);
-      setHistory(trackData.history || []);
+      // ✅ Only update state if data actually changed
+      setOrder((prev) => {
+        if (JSON.stringify(prev) !== JSON.stringify(merged)) return merged;
+        return prev;
+      });
+
+      setItems((prev) => {
+        if (JSON.stringify(prev) !== JSON.stringify(checkoutData.items || []))
+          return checkoutData.items || [];
+        return prev;
+      });
+
+      setHistory((prev) => {
+        if (JSON.stringify(prev) !== JSON.stringify(trackData.history || []))
+          return trackData.history || [];
+        return prev;
+      });
     } catch (err) {
       console.error("Order status load error:", err?.response?.data || err);
     } finally {
@@ -67,10 +77,10 @@ export default function OrderStatus() {
   useEffect(() => {
     loadOrder();
 
-    // poll faster so timeline updates appear quickly
+    // Poll every 10 seconds, but only re-render if data changes
     const interval = setInterval(() => {
       loadOrder();
-    }, 10000); // 10 seconds
+    }, 10000);
 
     return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -84,7 +94,7 @@ export default function OrderStatus() {
       setCancelling(true);
       const res = await cancelOrderAPI(orderNumber, token);
       if (res?.data?.success) {
-        // update UI
+        // Update UI immediately
         setOrder((o) =>
           o ? { ...o, OrderStatus: "Cancelled", order_status: "Cancelled" } : o
         );
@@ -116,7 +126,7 @@ export default function OrderStatus() {
     );
   }
 
-  // compute displayed total if backend didn't provide grand_total
+  // Compute displayed total
   const computedItemsTotal = items.reduce(
     (s, it) => s + parseFloat(it.subtotal || it.sub_total || 0),
     0
