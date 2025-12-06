@@ -7,18 +7,20 @@ export default function RestaurantHomeCard({ name, image, rating }) {
     <button
       className="category-card d-flex flex-column align-items-center justify-content-center mx-2 p-3"
       style={{
-        backgroundColor: " rgb(237, 243, 243)", // خلفية رئيسية للكارد
+        backgroundColor: "rgb(237, 243, 243)",
         borderRadius: "20px",
         border: "none",
         width: "120px",
         height: "160px",
-        color: "rgba(var(--bs-dark-rgb),",
         overflow: "hidden",
         position: "relative",
-    
         transition: "transform 0.3s, box-shadow 0.3s",
       }}
-      onClick={() => navigate(`/menu/${encodeURIComponent(name)}`)} // navigate to menu
+      onClick={() =>
+        navigate(`/menu/${encodeURIComponent(name)}`, {
+          state: { restaurantImageUrl: image }, // ✅ pass image here
+        })
+      }
       onMouseEnter={(e) => {
         e.currentTarget.style.transform = "scale(1.05)";
         e.currentTarget.style.boxShadow = "0 8px 16px rgba(0,0,0,0.3)";
@@ -28,13 +30,7 @@ export default function RestaurantHomeCard({ name, image, rating }) {
         e.currentTarget.style.boxShadow = "0 4px 8px rgba(0,0,0,0.2)";
       }}
     >
-      {/* صورة دائرية */}
-      <div
-        className="category-image-wrapper mb-2"
-        style={{
-          marginTop: "-0.5rem",
-        }}
-      >
+      <div className="category-image-wrapper mb-2" style={{ marginTop: "-0.5rem" }}>
         <img
           src={image}
           alt={name}
@@ -48,25 +44,16 @@ export default function RestaurantHomeCard({ name, image, rating }) {
         />
       </div>
 
-      {/* Rating section ( */}
       <div
         className="text-center mb-1"
-        style={{
-          fontSize: "0.85rem",
-          fontWeight: "bold",
-        }}
+        style={{ fontSize: "0.85rem", fontWeight: "bold" }}
       >
         ⭐ {rating}
       </div>
 
-
-      {/* اسم المطعم */}
       <h6
         className="fw-bold text-center"
-        style={{
-          paddingBottom: 10,
-          fontSize: "0.9rem",
-        }}
+        style={{ paddingBottom: 10, fontSize: "0.9rem" }}
       >
         {name}
       </h6>
